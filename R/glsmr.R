@@ -22,7 +22,7 @@
 #' @param sd_outlier_cutoff a single numeric value to define a cutoff value for how many iqr or sd units outlier values
 #' @param sd_or_iqr_cutoff a single string character of "iqr" or "sd" to determine if outlier should be determined by means and sd or medians and iqr.
 #' @return returns a glsmr object containing the complete linear and GAM models for the full data set, summary statistics for the data, a strata observational table, and a strata TSLS (MR) table.
-#' @importFrom stats na.omit anova quantile sd formula lm fitted.values
+#' @importFrom stats na.omit anova quantile sd formula lm fitted.values quantile
 #' @export
 #' @examples
 #' glsmr()
@@ -32,7 +32,7 @@ glsmr = function( wdata,
                   instrument = NA,
                   linear_covariates = NA,
                   smooth_covariates = NA,
-                  strata = "quartiles",
+                  strata = 4,
                   rnt_outcome = FALSE,
                   weights_variable = NA,
                   sd_outlier_cutoff = 5,
@@ -41,9 +41,9 @@ glsmr = function( wdata,
   ############################################
   ### 0. look for any errors in parameters
   ############################################
-  if (!strata[1] %in% c("quartiles","deciles") & length(strata) < 3 & class(strata) != "numeric" ){
-    stop("strata parameter can either be defined as (1) quartiles, (2) deciles, or (3) a numeric vector of at least length 3 defining strata boundries")
-    }
+  # if (!strata[1] %in% c("quartiles","deciles") & length(strata) < 3 & class(strata) != "numeric" ){
+  #   stop("strata parameter can either be defined as (1) quartiles, (2) deciles, or (3) a numeric vector of at least length 3 defining strata boundries")
+  #  }
 
   ############################################
   ### I. Define Model Data
@@ -136,42 +136,29 @@ glsmr = function( wdata,
   ####################################
   ## IX. Stratify
   ####################################
-  if(strata[1] == "quartiles"){
-    q = quantile( mod_data[, exposure], na.rm = TRUE )
+  if(length(strata) == 1){
+    q = quantile( mod_data[, exposure], probs = seq(0, 1, 1/strata), na.rm = TRUE )
   } else {
-    if(strata[1] == "deciles"){
-      q = quantile( mod_data[, exposure], probs = seq(0,1, by=0.1), na.rm = TRUE )
+    if(class(strata) == "numeric" & length(strata) >=3 ){
+      q = strata
     } else {
-      if(class(strata) == "numeric" & length(strata) >=3 ){
-          q = strata
-      } else {
-        stop("please check strata parameter. Acceptable values are 'quartiles', 'deciles', or a numeric vector of at least length 3 to define strata boundries.")
-      }
+      stop("please check strata parameter. Acceptable values are a single numeric value indicating the number of quantiles, or a numeric vector of at least length 3 to define strata boundries.")
     }
   }
 
-  ### identify samples of each strata
+  ### number of strata
   number_of_strata = length(q)-1; names(number_of_strata) = "number_of_strata"
-  strata_samples = lapply(1:number_of_strata, function(i){
-    if(i != number_of_strata){
-      w = which( mod_data[, exposure] >= q[i] & mod_data[, exposure] < q[i+1])
-    } else {
-      w = which( mod_data[, exposure] >= q[i] & mod_data[, exposure] <= q[i+1])
-    }
-    return(w)
-  })
+
+  ## identify samples of each strata
+  ## and add a strata label to the model data frame
+  mod_data$strata = as.factor( cut(mod_data[, exposure], q, include.lowest=T, labels=F) )
+
   ### make a data frame for each strata
-  strata_data = lapply(strata_samples, function(i){
-    mod_data[i,]
+  strata_data = lapply(1:number_of_strata, function(i){
+    w = which(mod_data$strata == i)
+    mod_data[w,]
   })
 
-  ## add a label to the model data frame
-  mod_data$strata = 0
-  for(i in 1:length(strata_samples)){
-    w = strata_samples[[i]]
-    mod_data$strata[w] = paste0("strata_", i)
-  }
-  mod_data$strata = as.factor(mod_data$strata)
 
   ## estimate exposure summary statistics for samples in each strata
   exposure_strata_sumstats = t( sapply( 1:length(strata_data), function(i){
@@ -193,8 +180,8 @@ glsmr = function( wdata,
   strata_linear_mods = t( sapply(1:length(strata_data), function(i){
     x = strata_data[[i]]
     ### variability check
-    var_present = apply(x, 2, function(i){ length(unique(i))})
-    if( sum(var_present == 1) == 0){
+    var_present = apply(x, 2, function(i){ length(unique(i))}) ## only column name 'strata' should have a var == 1
+    if( sum(var_present == 1) == 1){
       lm_mod = lmfit( wdata = x,
                            dependent = outcome,
                            independent = exposure,
@@ -231,13 +218,43 @@ glsmr = function( wdata,
 
   ######################
   ### XIV. Estimate d.hat
+  ###      AND beta coefficents
   ######################
-  form = formula(paste0(exposure , "~", instrument))
-  fitDhat = lm( form ,data = mod_data)
-  VarExp_by_Instrument_on_Exposure = summary(fitDhat)$r.sq; names(VarExp_by_Instrument_on_Exposure) = "VarExp_by_Instrument_on_Exposure"
-  temp = fitted.values(fitDhat)
+  ## Univariate analysis
+  form = formula(paste0(exposure, " ~ ", instrument ))
+  fit_grs_exp = lm( form , data = mod_data)
+
+  ## Variance in Exposure Explained by Instrument
+  Exposure_Var_Exp_by_IV = summary(fit_grs_exp)$r.sq; names(Exposure_Var_Exp_by_IV) = "Exposure_Var_Exp_by_IV"
+
+  ## d.hat
+  temp = fitted.values(fit_grs_exp)
   m = match(rownames(mod_data), names(temp))
   mod_data$d.hat = temp[m]
+
+  ## Univariate Coefficients
+  univariate = summary(fit_grs_exp)$coefficients[instrument,c(1,2,4)]
+  names( univariate ) = paste0( "grs_on_exp_", c("beta","se","P") )
+
+  ## Multivariate estimate
+  cvs = c(linear_covariates, smooth_covariates)
+  if( !is.na(cvs)[1] ){
+    form = formula(paste0(exposure, " ~ ", paste0( cvs, collapse = " + ") , " + ", instrument ))
+    fit_grs_exp = lm( form , data = mod_data)
+    multivariate = summary(fit_grs_exp)$coefficients[instrument,c(1,2,4)]
+    ## variance explained given the multivariate model
+    a = anova(fit_grs_exp)
+    etasq = a[,2]/sum(a[,2]); names(etasq) = paste0("etasq_",rownames(a))
+    Exposure_Var_Exp_by_IV_etasq = etasq[instrument]; names(Exposure_Var_Exp_by_IV_etasq) = "Exposure_Var_Exp_by_IV_etasq"
+    } else {
+      multivariate = c(NA, NA, NA)
+      Exposure_Var_Exp_by_IV_etasq = NA; names(Exposure_Var_Exp_by_IV_etasq) = "Exposure_Var_Exp_by_IV_etasq"
+    }
+  names( multivariate ) = paste0( "grs_on_exp_", c("beta","se","P") )
+
+  ## combine univariate and multivariate estimates
+  grs_on_exp_coeff = rbind(univariate, multivariate)
+
 
   ######################
   ### XIV. IV GAM model
@@ -277,7 +294,7 @@ glsmr = function( wdata,
     x = strata_data[[i]]
     ### variability check
     var_present = apply(x, 2, function(i){ length(unique(i))})
-    if( sum(var_present == 1) == 0){
+    if( sum(var_present == 1) == 1){
 
       iv_mod = ivregfit( wdata = x,
                          outcome = outcome,
@@ -297,12 +314,54 @@ glsmr = function( wdata,
   }) )
 
   ####################################
-  ## XI. Add strata sum stats to
+  ## XVIII. Add strata sum stats to
   ##    linear model estimates
   ####################################
   strata_ivreg_mods = cbind(strata_ivreg_mods, exposure_strata_sumstats)
   rownames(strata_ivreg_mods) = paste0("strata_", 1:nrow(strata_ivreg_mods))
   strata_ivreg_mods = as.data.frame(strata_ivreg_mods)
+
+  ####################################
+  ## XIX Run a linear model of
+  ##      instrument on outcome
+  ##       for each strata
+  ####################################
+  cvs = na.omit(c(linear_covariates, smooth_covariates))
+
+  strata_IV_linear_mods = t( sapply(1:length(strata_data), function(i){
+    x = strata_data[[i]]
+    ### variability check
+    var_present = apply(x, 2, function(i){ length(unique(i))}) ## only column name 'strata' should have a var == 1
+    if( sum(var_present == 1) == 1){
+      lm_mod = lmfit( wdata = x,
+                      dependent = outcome,
+                      independent = instrument,
+                      covariates = cvs)
+    }else{
+      o = rep(NA, 10); names(o) = c("n","W","Rsq","Fstat","df","dendf","beta","se","tval","P")
+      lm_mod = list(summary = o)
+    }
+
+    return(lm_mod$summary)
+  }) )
+  strata_IV_linear_mods = as.data.frame(strata_IV_linear_mods)
+
+  ## derive ratio values
+  if( !is.na( grs_on_exp_coeff["multivariate", "grs_on_exp_beta"] ) ){
+    strata_IV_linear_mods$beta_ratio = strata_IV_linear_mods$beta / grs_on_exp_coeff["multivariate", "grs_on_exp_beta"]
+    strata_IV_linear_mods$se_ratio = strata_IV_linear_mods$se / grs_on_exp_coeff["multivariate", "grs_on_exp_beta"]
+  } else {
+    strata_IV_linear_mods$beta_ratio = strata_IV_linear_mods$beta / grs_on_exp_coeff["univariate", "grs_on_exp_beta"]
+    strata_IV_linear_mods$se_ratio = strata_IV_linear_mods$se / grs_on_exp_coeff["univariate", "grs_on_exp_beta"]
+  }
+
+  ####################################
+  ## XI. Add strata sum stats to
+  ##    linear model estimates
+  ####################################
+  strata_IV_linear_mods = cbind(strata_IV_linear_mods, exposure_strata_sumstats)
+  rownames(strata_IV_linear_mods) = paste0("strata_", 1:nrow(strata_IV_linear_mods))
+  strata_IV_linear_mods = as.data.frame(strata_IV_linear_mods)
 
   ####################################
   ## RESULTS OUT
@@ -316,7 +375,8 @@ glsmr = function( wdata,
              rnt_outcome,
              number_of_strata,
              linear_nonlinear_test,
-             VarExp_by_Instrument_on_Exposure,
+             Exposure_Var_Exp_by_IV,
+             Exposure_Var_Exp_by_IV_etasq,
              iv_linear_nonlinear_test,
              exposure = exposure,
              outcome = outcome ) )
@@ -324,6 +384,7 @@ glsmr = function( wdata,
 
   out = list(strata_linear_mods = strata_linear_mods,
              strata_ivreg_mods = strata_ivreg_mods,
+             strata_IV_linear_mods = strata_IV_linear_mods,
              summary_stats = ss_out,
              full_linear_model = lm_mod[[1]],
              null_full_gam_model = gam_mod0[[1]],

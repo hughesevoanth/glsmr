@@ -80,7 +80,7 @@ plot_glsmr = function( glsmr_obj ){
   ldata = ldata %>% mutate(sig = ifelse(P<0.05, "1", "0") )
   ldata$sig = factor(ldata$sig, levels = c("0","1"))
 
-  ## iv estimate data
+  ## ivreg estimate data
   ivdata = glsmr_obj$strata_ivreg_mods[, c("beta","se","P","mean")]
   ivdata = rbind(ivdata, c(as.numeric(iv_est[c(1,2,4)]), fulldata_mean))
   ivdata$data = "strata"
@@ -89,6 +89,17 @@ plot_glsmr = function( glsmr_obj ){
 
   ivdata = ivdata %>% mutate(sig = ifelse(P<0.05, "1", "0") )
   ivdata$sig = factor(ivdata$sig, levels = c("0","1"))
+
+  ## linear IV estimate data: instrument-on-outcome / instrument-on-exposure
+  l_iv_data = glsmr_obj$strata_IV_linear_mods[, c("beta_ratio","se_ratio","P","mean")]
+  colnames(l_iv_data) = c("beta","se","P","mean")
+  l_iv_data = rbind(l_iv_data, c(as.numeric(iv_est[c(1,2,4)]), fulldata_mean))
+  l_iv_data$data = "strata"
+  l_iv_data$data[nrow(l_iv_data)] = "all"
+  l_iv_data$data = as.factor(l_iv_data$data)
+
+  l_iv_data = l_iv_data %>% mutate(sig = ifelse(P<0.05, "1", "0") )
+  l_iv_data$sig = factor(l_iv_data$sig, levels = c("0","1"))
 
   #############################
   ## IV. PLOT strata point
@@ -105,7 +116,7 @@ plot_glsmr = function( glsmr_obj ){
     labs(x = "mean of exposure strata", title = "observational strata estimates") +
     theme_bw()
 
-  iv_est_plot = ivdata %>%
+  iv_est_plot = l_iv_data %>%
     ggplot(aes(x = mean, y = beta)) +
     geom_errorbar( aes(ymin=beta-se, ymax=beta+se), width = 0.2 ) +
     geom_point(aes(color = sig, shape = data  ) , size = 3) +

@@ -11,7 +11,7 @@ glsmr(
   instrument = NA,
   linear_covariates = NA,
   smooth_covariates = NA,
-  strata = "quartiles",
+  strata = 4,
   rnt_outcome = FALSE,
   weights_variable = NA,
   sd_outlier_cutoff = 5,
