@@ -22,7 +22,7 @@ This is an R package to aid in determining if observational or two-stage least s
 	          instrument = "bmi_grs",
 	          linear_covariates = c("batch", "sex"),
 	          smooth_covariates =  c("age"),
-	          # strata = "quartiles",
+	          # strata = 4, ## for quartiles
 	          strata = c(17,25,30,62),
 	          rnt_outcome = TRUE,
 	          weights_variable = NA,
@@ -34,7 +34,10 @@ This is an R package to aid in determining if observational or two-stage least s
           
 - an example for using plot_glsmr()
 		
-		plot_glsmr(myexample)
+		plot_glsmr(myexample,
+			add_strata_2_curves = FALSE,
+			add_strata_2_points = TRUE,
+			brewer_col = "Set1")
 
 ### An example figure from plot_glsmr()
 
@@ -91,8 +94,8 @@ This is an R package to aid in determining if observational or two-stage least s
 4. instrument: column name indicating the designated instrument (NOT d.hat | instrument predicted exposure)
 5. linear_covariates: column name indicating the designated covariates that should always be considered parametric or linear.
 6. smooth_covariates: column name indicating the designated covariates that should be modeled as non-linear smooths in the GAMs.
-7. strata: a string vector of "quartiles", "deciles", or a numeric vector of user defined boundries.
-	- Example: strata = c(1,10,20,300) would give the following 3 strata
+7. strata: a single numeric value to define the number of quantiles, or a numeric vector (>= length 3) of user defined boundries.
+	- Example: strata = c(1,10,20,30) would give the following 3 strata
 		- x >= 1 & x < 10 ; 1 to 10 including 1.
 		- x >= 10 & x < 20 ; 10 to 20 including 10.
 		- x >= 20 & x <= 30 ; 20 to 30 including 20 and 30.
