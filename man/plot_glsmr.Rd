@@ -4,10 +4,21 @@
 \alias{plot_glsmr}
 \title{Plot functions for glsmr objects}
 \usage{
-plot_glsmr(glsmr_obj)
+plot_glsmr(
+  glsmr_obj,
+  add_strata_2_curves = FALSE,
+  add_strata_2_points = FALSE,
+  brewer_col = "Set1"
+)
 }
 \arguments{
 \item{glsmr_obj}{a glsmr object from the function glsmr()}
+
+\item{add_strata_2_curves}{binary TRUE or FALSE if strata boundaries should be illustrated to curve plots}
+
+\item{add_strata_2_points}{binary TRUE or FALSE if strata boundaries should be illustrated to dot plots}
+
+\item{brewer_col}{a brewer.pal color palette string}
 }
 \value{
 ggplot figure
