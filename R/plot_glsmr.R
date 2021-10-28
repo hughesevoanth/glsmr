@@ -118,6 +118,7 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   # pcol = c(RColorBrewer::brewer.pal(9, "Set1"), "grey20")
 
   ## plot linear and non-linear relationships
+  o_lnl_plot = pdata %>% ggplot(aes_string(x = exposure, y = outcome)) +
     geom_smooth( method = "lm", formula = y~x, color = "black", se = TRUE ) +
     geom_smooth( method = "gam", formula = y~s(x), color = "blue", se = TRUE ) +
     geom_point( x = fd_exp_mean , y = fd_outcome_mean , size = 3, color = "darkorange1", shape = 15 ) +
@@ -130,7 +131,7 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   if(add_strata_2_curves == TRUE){
     o_lnl_plot = o_lnl_plot +
       geom_rect(data = ldata[1:(nrow(ldata)-1),],
-                aes(x = fd_exp_mean, y = fd_outcome_mean,
+                aes(x = NULL, y = NULL,
                     xmin = min, xmax = max,
                     ymin = -Inf, ymax = Inf,
                     fill = strataID ),
@@ -141,7 +142,7 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   iv_lnl_plot = pdata %>% ggplot(aes_string(x = instrument, y = outcome)) +
     geom_smooth( method = "lm", formula = y~x, color = "black", se = TRUE ) +
     geom_smooth( method = "gam", formula = y~s(x), color = "blue", se = TRUE ) +
-    geom_point( x = fd_dhat_mean , y = fd_outcome_mean , size = 3, color = "darkorange1", shape = 15 ) +
+    geom_point( aes(x = fd_dhat_mean , y = fd_outcome_mean) , size = 3, color = "darkorange1", shape = 15 ) +
     geom_vline(xintercept = strata_means, color = "grey20", linetype = "dashed") +
     labs(title = "MR relationship", x = paste0("genotype predicted ", exposure),
          subtitle = paste0( "non-linear GAM a better fit? P = ", MR_nonlinear_P) ) +
@@ -151,7 +152,7 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   if(add_strata_2_curves == TRUE){
     iv_lnl_plot = iv_lnl_plot +
       geom_rect(data = ldata[1:(nrow(ldata)-1),],
-                aes(x = fd_exp_mean, y = fd_outcome_mean,
+                aes(x = NULL, y = NULL,
                     xmin = min, xmax = max,
                     ymin = -Inf, ymax = Inf,
                     fill = strataID ),
