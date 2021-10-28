@@ -8,11 +8,10 @@
 #' @param add_strata_2_points binary TRUE or FALSE if strata boundaries should be illustrated to dot plots
 #' @param brewer_col a brewer.pal color palette string
 #' @return ggplot figure
-#' @importFrom ggplot2 ggplot aes_string geom_point geom_rect geom_smooth aes scale_color_manual scale_shape_manual geom_errorbar geom_vline geom_hline labs theme_bw
+#' @importFrom ggplot2 ggplot aes_string geom_point geom_rect geom_smooth aes scale_color_manual scale_shape_manual scale_fill_brewer geom_errorbar geom_vline geom_hline labs theme_bw
 #' @importFrom magrittr %>%
 #' @importFrom ggpubr ggarrange
 #' @importFrom dplyr mutate
-#' @importFrom RColorBrewer brewer.pal
 #' @export
 #' @examples
 #' plot_glsmr()
