@@ -73,18 +73,26 @@ This is an R package to aid in determining if observational or two-stage least s
 	- W-stat for exposure
 	- was the outcome rank normal transformed
 	- number of strata produced
-	- p-value (F-test) for a non-linear observational model better than a linear model .. gam() vs gam()
-	- an estimate of the variance explained (Rsq) by instrument on exposure
-	- p-value (F-test) for a non-linear TSLS (d.hat) model better than a linear model .. gam() vs gam()
+	- observational non-linearity test degrees of freedom
+	- observational non-linearity test additional deviance explained by GAM
+	- observational non-linearity test F value
+	- observational non-linearity test P value
+	- an estimate of the variance explained (Rsq) by instrument on exposure in a univariate analysis
+	- an estimate of the (eta-sq) variance explained (Rsq) by instrument on exposure in a multivariate (including covariates) analysis
+	- stage two IV non-linearity test degrees of freedom
+	- stage two IV non-linearity test additional deviance explained by GAM
+	- stage two IV non-linearity test F value
+	- stage two IV non-linearity test P value
 	- user defined exposure
 	- user defined outcome
 4. full_linear_model: lm() object, product of step 5
 5. null_full_gam_model: gam() object, product of step 6
 6. full_gam_model: gam() object, product of step 7
-7. full_ivreg_model: ivreg() object, product of step 11
-8. null_full_iv_gam_model: gam() object, product of step 13
-9. full_iv_gam_model: gam() object, product of step 14
-10. model_data: user defined data for models
+7. iv_on_exp_coeff: a table of effect estimates of IV on exposure in a linear univariate and multivariate framework.
+8. full_ivreg_model: ivreg() object, product of step 11
+9. null_full_iv_gam_model: gam() object, product of step 13
+10. full_iv_gam_model: gam() object, product of step 14
+11. model_data: user defined data for models
 
 ### glsmr() parameters
 

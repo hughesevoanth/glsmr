@@ -131,7 +131,7 @@ glsmr = function( wdata,
   ##       exposure smooth and full GAM
   ####################################
   a = anova(gam_mod0$fit, gam_mod$fit, test = "F")
-  linear_nonlinear_test = a[2,3:6]; names(linear_nonlinear_test) = paste0( "linear_nonlinear_test_", c("df","deviance","F","P"))
+  obs_nonlinearity_test = a[2,3:6]; names(obs_nonlinearity_test) = paste0( "obs_nonlinearity_test_", c("df","deviance","F","P"))
 
   ####################################
   ## IX. Stratify
@@ -238,14 +238,14 @@ glsmr = function( wdata,
 
   ## Multivariate estimate
   cvs = c(linear_covariates, smooth_covariates)
-  if( !is.na(cvs)[1] ){
+  if( length(na.omit( cvs )) > 0 ) {
     form = formula(paste0(exposure, " ~ ", paste0( cvs, collapse = " + ") , " + ", instrument ))
     fit_grs_exp = lm( form , data = mod_data)
     multivariate = summary(fit_grs_exp)$coefficients[instrument,c(1,2,4)]
     ## variance explained given the multivariate model
     a = anova(fit_grs_exp)
     etasq = a[,2]/sum(a[,2]); names(etasq) = paste0("etasq_",rownames(a))
-    Exposure_Var_Exp_by_IV_etasq = etasq[instrument]; names(Exposure_Var_Exp_by_IV_etasq) = "Exposure_Var_Exp_by_IV_etasq"
+    Exposure_Var_Exp_by_IV_etasq = etasq[ paste0("etasq_", instrument )]; names(Exposure_Var_Exp_by_IV_etasq) = "Exposure_Var_Exp_by_IV_etasq"
     } else {
       multivariate = c(NA, NA, NA)
       Exposure_Var_Exp_by_IV_etasq = NA; names(Exposure_Var_Exp_by_IV_etasq) = "Exposure_Var_Exp_by_IV_etasq"
@@ -253,7 +253,7 @@ glsmr = function( wdata,
   names( multivariate ) = paste0( "grs_on_exp_", c("beta","se","P") )
 
   ## combine univariate and multivariate estimates
-  grs_on_exp_coeff = rbind(univariate, multivariate)
+  iv_on_exp_coeff = rbind(univariate, multivariate)
 
 
   ######################
@@ -282,7 +282,7 @@ glsmr = function( wdata,
   ##       exposure smooth and full GAM
   ####################################
   a = anova(iv_gam_mod0$fit, iv_gam_mod$fit, test = "F")
-  iv_linear_nonlinear_test = a[2,3:6]; names(iv_linear_nonlinear_test) = paste0( "iv_linear_nonlinear_test_", c("df","deviance","F","P"))
+  iv_nonlinearity_test = a[2,3:6]; names(iv_nonlinearity_test) = paste0( "iv_nonlinearity_test_", c("df","deviance","F","P"))
 
   ####################################
   ## XVII. Run a ivreg model on each
@@ -347,12 +347,12 @@ glsmr = function( wdata,
   strata_IV_linear_mods = as.data.frame(strata_IV_linear_mods)
 
   ## derive ratio values
-  if( !is.na( grs_on_exp_coeff["multivariate", "grs_on_exp_beta"] ) ){
-    strata_IV_linear_mods$beta_ratio = strata_IV_linear_mods$beta / grs_on_exp_coeff["multivariate", "grs_on_exp_beta"]
-    strata_IV_linear_mods$se_ratio = strata_IV_linear_mods$se / grs_on_exp_coeff["multivariate", "grs_on_exp_beta"]
+  if( !is.na( iv_on_exp_coeff["multivariate", "grs_on_exp_beta"] ) ){
+    strata_IV_linear_mods$beta_ratio = strata_IV_linear_mods$beta / iv_on_exp_coeff["multivariate", "grs_on_exp_beta"]
+    strata_IV_linear_mods$se_ratio = strata_IV_linear_mods$se / iv_on_exp_coeff["multivariate", "grs_on_exp_beta"]
   } else {
-    strata_IV_linear_mods$beta_ratio = strata_IV_linear_mods$beta / grs_on_exp_coeff["univariate", "grs_on_exp_beta"]
-    strata_IV_linear_mods$se_ratio = strata_IV_linear_mods$se / grs_on_exp_coeff["univariate", "grs_on_exp_beta"]
+    strata_IV_linear_mods$beta_ratio = strata_IV_linear_mods$beta / iv_on_exp_coeff["univariate", "grs_on_exp_beta"]
+    strata_IV_linear_mods$se_ratio = strata_IV_linear_mods$se / iv_on_exp_coeff["univariate", "grs_on_exp_beta"]
   }
 
   ####################################
@@ -374,16 +374,16 @@ glsmr = function( wdata,
                        W_exposure = W_exposure,
                        rnt_outcome = rnt_outcome,
                        number_of_strata = number_of_strata,
-                       obs_nonlinearity_test_df = linear_nonlinear_test[1],
-                       obs_nonlinearity_test_deviance = linear_nonlinear_test[2],
-                       obs_nonlinearity_test_F = linear_nonlinear_test[3],
-                       obs_nonlinearity_test_P = linear_nonlinear_test[4],
+                       obs_nonlinearity_test_df = obs_nonlinearity_test[1],
+                       obs_nonlinearity_test_deviance = obs_nonlinearity_test[2],
+                       obs_nonlinearity_test_F = obs_nonlinearity_test[3],
+                       obs_nonlinearity_test_P = obs_nonlinearity_test[4],
                        exposure_VarExp_by_iv = Exposure_Var_Exp_by_IV,
                        exposure_VarExp_by_iv_etasq = Exposure_Var_Exp_by_IV_etasq,
-                       iv_nonlinearity_test_df = iv_linear_nonlinear_test[1],
-                       iv_nonlinearity_test_deviance = iv_linear_nonlinear_test[2],
-                       iv_nonlinearity_test_F = iv_linear_nonlinear_test[3],
-                       iv_nonlinearity_test_P = iv_linear_nonlinear_test[4],
+                       iv_nonlinearity_test_df = iv_nonlinearity_test[1],
+                       iv_nonlinearity_test_deviance = iv_nonlinearity_test[2],
+                       iv_nonlinearity_test_F = iv_nonlinearity_test[3],
+                       iv_nonlinearity_test_P = iv_nonlinearity_test[4],
                        exposure = exposure,
                        outcome = outcome )
   rownames(ss_out) = "sumstats"
@@ -395,6 +395,7 @@ glsmr = function( wdata,
              full_linear_model = lm_mod[[1]],
              null_full_gam_model = gam_mod0[[1]],
              full_gam_model = gam_mod[[1]],
+             iv_on_exp_coeff = iv_on_exp_coeff,
              full_ivreg_model = iv_fit[[1]],
              null_full_iv_gam_model = iv_gam_mod0[[1]],
              full_iv_gam_model = iv_gam_mod[[1]],

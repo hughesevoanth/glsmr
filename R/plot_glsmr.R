@@ -21,7 +21,7 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   ## I. Prepare SumStats for plots
   #############################
   ## plot data
-  pdata = glsmr_obj$model_data
+  pdata = na.omit(glsmr_obj$model_data)
 
   ## table of summary statistics
   ss = glsmr_obj$summary_stats
