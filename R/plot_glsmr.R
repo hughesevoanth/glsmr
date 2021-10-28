@@ -33,17 +33,17 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   strata_means = glsmr_obj$strata_IV_linear_mods$mean
 
   ## "full data" mean min and max for exposure
-  fd_exp_mean = mean( glsmr_obj$model_data[, exposure], na.rm = TRUE)
-  fd_exp_min = min( glsmr_obj$model_data[, exposure], na.rm = TRUE)
-  fd_exp_max = max( glsmr_obj$model_data[, exposure], na.rm = TRUE)
+  fd_exp_mean = mean( pdata[, exposure], na.rm = TRUE)
+  fd_exp_min = min( pdata[, exposure], na.rm = TRUE)
+  fd_exp_max = max( pdata[, exposure], na.rm = TRUE)
 
   ## "full data" mean min and max for d.hat
-  fd_dhat_mean = mean( glsmr_obj$model_data[, instrument], na.rm = TRUE)
-  fd_dhat_min = min( glsmr_obj$model_data[, instrument], na.rm = TRUE)
-  fd_dhat_max = max( glsmr_obj$model_data[, instrument], na.rm = TRUE)
+  fd_dhat_mean = mean( pdata[, instrument], na.rm = TRUE)
+  fd_dhat_min = min( pdata[, instrument], na.rm = TRUE)
+  fd_dhat_max = max( pdata[, instrument], na.rm = TRUE)
 
   ## "full data" mean for outcome
-  fd_outcome_mean = mean( glsmr_obj$model_data[, outcome], na.rm = TRUE)
+  fd_outcome_mean = mean( pdata[, outcome], na.rm = TRUE)
 
   ## FORMAT P values for the linear vs non-linear F test
   obs_nonlinear_P = as.numeric( ss$obs_nonlinearity_test_P )
@@ -118,9 +118,9 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   # pcol = c(RColorBrewer::brewer.pal(9, "Set1"), "grey20")
 
   ## plot linear and non-linear relationships
-  o_lnl_plot = pdata %>% ggplot(aes_string(x = exposure, y = outcome)) +
     geom_smooth( method = "lm", formula = y~x, color = "black", se = TRUE ) +
     geom_smooth( method = "gam", formula = y~s(x), color = "blue", se = TRUE ) +
+    geom_point( x = fd_exp_mean , y = fd_outcome_mean , size = 3, color = "darkorange1", shape = 15 ) +
     geom_vline(xintercept = strata_means, color = "grey20", linetype = "dashed") +
     labs(title = "observational relationship",
          subtitle = paste0( "non-linear GAM a better fit? P = ", obs_nonlinear_P) ) +
@@ -141,6 +141,7 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   iv_lnl_plot = pdata %>% ggplot(aes_string(x = instrument, y = outcome)) +
     geom_smooth( method = "lm", formula = y~x, color = "black", se = TRUE ) +
     geom_smooth( method = "gam", formula = y~s(x), color = "blue", se = TRUE ) +
+    geom_point( x = fd_dhat_mean , y = fd_outcome_mean , size = 3, color = "darkorange1", shape = 15 ) +
     geom_vline(xintercept = strata_means, color = "grey20", linetype = "dashed") +
     labs(title = "MR relationship", x = paste0("genotype predicted ", exposure),
          subtitle = paste0( "non-linear GAM a better fit? P = ", MR_nonlinear_P) ) +
