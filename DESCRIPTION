@@ -14,11 +14,11 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
 Imports:
-  dplyr (>=1.0.7),
-  ggplot2 (>=3.3.5),
-  ggpubr (>=0.4.0),
-  ivreg (>=0.6.0),
-  magrittr (>=2.0.1),
-  mgcv (>=1.8.37)
+  dplyr,
+  ggplot2,
+  ggpubr,
+  ivreg,
+  magrittr,
+  mgcv
 Suggests:
   RColorBrewer
