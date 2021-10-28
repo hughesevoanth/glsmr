@@ -368,19 +368,25 @@ glsmr = function( wdata,
   ####################################
   names(rnt_outcome) = "outcome_RNTransformed"
   ## summary stats
-  ss_out = unlist( c(number_of_outcome_outliers,
-             number_of_exposure_outliers,
-             W_outcome,
-             W_exposure,
-             rnt_outcome,
-             number_of_strata,
-             linear_nonlinear_test,
-             Exposure_Var_Exp_by_IV,
-             Exposure_Var_Exp_by_IV_etasq,
-             iv_linear_nonlinear_test,
-             exposure = exposure,
-             outcome = outcome ) )
-
+  ss_out = data.frame( number_of_outcome_outliers = number_of_outcome_outliers,
+                       number_of_exposure_outliers = number_of_exposure_outliers,
+                       W_outcome = W_outcome,
+                       W_exposure = W_exposure,
+                       rnt_outcome = rnt_outcome,
+                       number_of_strata = number_of_strata,
+                       obs_nonlinearity_test_df = linear_nonlinear_test[1],
+                       obs_nonlinearity_test_deviance = linear_nonlinear_test[2],
+                       obs_nonlinearity_test_F = linear_nonlinear_test[3],
+                       obs_nonlinearity_test_P = linear_nonlinear_test[4],
+                       exposure_VarExp_by_iv = Exposure_Var_Exp_by_IV,
+                       exposure_VarExp_by_iv_etasq = Exposure_Var_Exp_by_IV_etasq,
+                       iv_nonlinearity_test_df = iv_linear_nonlinear_test[1],
+                       iv_nonlinearity_test_deviance = iv_linear_nonlinear_test[2],
+                       iv_nonlinearity_test_F = iv_linear_nonlinear_test[3],
+                       iv_nonlinearity_test_P = iv_linear_nonlinear_test[4],
+                       exposure = exposure,
+                       outcome = outcome )
+  rownames(ss_out) = "sumstats"
 
   out = list(strata_linear_mods = strata_linear_mods,
              strata_ivreg_mods = strata_ivreg_mods,

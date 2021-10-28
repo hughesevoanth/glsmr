@@ -25,11 +25,11 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   pdata = glsmr_obj$model_data
 
   ## table of summary statistics
-  ss = as.data.frame(glsmr_obj$summary_stats)
+  ss = glsmr_obj$summary_stats
 
-  ## defive variables
-  outcome = ss[ "outcome", ]
-  exposure = ss[ "exposure", ]
+  ## define variables
+  outcome = ss$outcome
+  exposure = ss$exposure
   instrument = "d.hat"
   strata_means = glsmr_obj$strata_IV_linear_mods$mean
 
@@ -47,10 +47,10 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   fd_outcome_mean = mean( glsmr_obj$model_data[, outcome], na.rm = TRUE)
 
   ## FORMAT P values for the linear vs non-linear F test
-  obs_nonlinear_P = as.numeric( ss["linear_nonlinear_test_P",] )
+  obs_nonlinear_P = as.numeric( ss$obs_nonlinearity_test_P )
   obs_nonlinear_P = formatC(obs_nonlinear_P, format = "e", digits = 2)
 
-  MR_nonlinear_P = as.numeric( ss["iv_linear_nonlinear_test_P",] )
+  MR_nonlinear_P = as.numeric( ss$iv_nonlinearity_test_P )
   MR_nonlinear_P = formatC(MR_nonlinear_P, format = "e", digits = 2)
 
   ## Extract full observational model linear estimates
