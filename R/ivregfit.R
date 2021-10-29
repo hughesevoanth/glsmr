@@ -34,7 +34,7 @@ ivregfit = function( wdata,
   ######################
   ### II. Linear model
   ######################
-  if( !is.na(covariates)[1] ){
+  if( length(na.omit(covariates))>0 ){
     form = formula(paste0( outcome, " ~ ", paste0( covariates, collapse = " + ") ," | ", exposure, " | " , instrument ))
   } else {
     form = formula( paste0( outcome, " ~ ",  exposure, " | " , instrument ) )
@@ -43,7 +43,7 @@ ivregfit = function( wdata,
   #########################
   ## III. RUN the MR model
   #########################
-  if( !is.na( weights_variable ) ) {
+  if( length(na.omit(weights_variable))>0) {
     iv_mod = ivreg( form, data = wdata, weights = wdata[ , weights_variable] )
   } else {
     iv_mod = ivreg(form, data = wdata )

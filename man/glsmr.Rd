@@ -15,7 +15,8 @@ glsmr(
   rnt_outcome = FALSE,
   weights_variable = NA,
   sd_outlier_cutoff = 5,
-  sd_or_iqr_cutoff = "iqr"
+  sd_or_iqr_cutoff = "iqr",
+  messages = FALSE
 )
 }
 \arguments{
@@ -44,6 +45,8 @@ glsmr(
 \item{sd_outlier_cutoff}{a single numeric value to define a cutoff value for how many iqr or sd units outlier values}
 
 \item{sd_or_iqr_cutoff}{a single string character of "iqr" or "sd" to determine if outlier should be determined by means and sd or medians and iqr.}
+
+\item{messages}{should a progress message be printed to screen - binary TRUE or FALSE}
 }
 \value{
 returns a glsmr object containing the complete linear and GAM models for the full data set, summary statistics for the data, a strata observational table, and a strata TSLS (MR) table.
@@ -52,7 +55,7 @@ returns a glsmr object containing the complete linear and GAM models for the ful
 This function derives strata defined observational and TSLS (MR) estimates using linear modeling.
 The full data set will be fit to a linear model and a generalized linear model (GAM).
 Then subsequently the exposure data will be stratified and a linear model will be used to derive
-effect estimmates for each strata.
+effect estimates for each strata.
 }
 \examples{
 glsmr()

@@ -28,7 +28,7 @@ lmfit = function( wdata,
   ######################
   ### II. Linear model
   ######################
-  if( !is.na(covariates)[1] ){
+  if( length(na.omit(covariates))>0 ){
     form = formula(paste0(dependent, " ~ ", paste0( covariates, collapse = " + ") , " + ", independent ))
   } else {
     form = formula(paste0(dependent, " ~ ", independent ))

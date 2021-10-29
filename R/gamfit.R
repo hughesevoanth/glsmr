@@ -32,31 +32,33 @@ gamfit = function( wdata,
   ######################
   ### II. GAM model
   ######################
-  covariates = na.omit( c(linear_covariates,smooth_covariates ) )
+  linear_covariates = na.omit(linear_covariates)
+  smooth_covariates = na.omit(smooth_covariates)
+  covariates =c(linear_covariates, smooth_covariates )
 
   if(is.na(independent)){
-    if(!is.na(linear_covariates[1]) & !is.na(smooth_covariates[1])){
-      form = formula( paste0(dependent, " ~ ", paste0( linear_covariates, collapse = " + ") , " + " , paste0( "s(",  smooth_covariates, ")", collapse = " + ") ) )
-    } else {
-      if(!is.na(linear_covariates[1]) & is.na(smooth_covariates[1])){
-        form = formula( paste0(dependent, " ~ ", paste0( linear_covariates, collapse = " + ") ) )
-      } else {
-        if(is.na(linear_covariates[1]) & !is.na(smooth_covariates[1])){
-          form = formula( paste0(dependent, " ~ ",  paste0( "s(",  smooth_covariates, ")", collapse = " + ") ) )
+        if( length(na.omit(linear_covariates))>0 & length(na.omit(smooth_covariates))>0 ){
+          form = formula( paste0(dependent, " ~ ", paste0( linear_covariates, collapse = " + ") , " + " , paste0( "s(",  smooth_covariates, ")", collapse = " + ") ) )
+        } else {
+          if( length(na.omit(linear_covariates))>0 & length(na.omit(smooth_covariates))==0 ){
+            form = formula( paste0(dependent, " ~ ", paste0( linear_covariates, collapse = " + ") ) )
+          } else {
+            if( length(na.omit(linear_covariates))==0 & length(na.omit(smooth_covariates))>0 ){
+              form = formula( paste0(dependent, " ~ ",  paste0( "s(",  smooth_covariates, ")", collapse = " + ") ) )
+            }
+          }
         }
-      }
-    }
   } else{
     if( length(covariates) == 0 ){
       form = formula(paste0(dependent, " ~ ", "s(",independent,")" ))
     } else {
-      if(!is.na(linear_covariates[1]) & !is.na(smooth_covariates[1])){
+      if( length(na.omit(linear_covariates))>0 & length(na.omit(smooth_covariates))>0 ){
         form = formula(paste0(dependent, " ~ ", paste0( linear_covariates, collapse = " + ") , " + " , paste0( "s(",  smooth_covariates, ")", collapse = " + ") , " + ","s(",independent,")" ))
       } else {
-        if(!is.na(linear_covariates[1]) & is.na(smooth_covariates[1])){
+        if( length(na.omit(linear_covariates))>0 & length(na.omit(smooth_covariates))==0){
           form = formula(paste0(dependent, " ~ ", paste0( linear_covariates, collapse = " + ") , " + ","s(",independent,")" ))
         } else {
-          if(is.na(linear_covariates[1]) & !is.na(smooth_covariates[1])){
+          if( length(na.omit(linear_covariates))==0 & length(na.omit(smooth_covariates))>0){
             form = formula(paste0(dependent, " ~ ",  paste0( "s(",  smooth_covariates, ")", collapse = " + ") , " + ","s(",independent,")" ))
           }
         }

@@ -3,7 +3,7 @@
 #' This function derives strata defined observational and TSLS (MR) estimates using linear modeling.
 #' The full data set will be fit to a linear model and a generalized linear model (GAM).
 #' Then subsequently the exposure data will be stratified and a linear model will be used to derive
-#' effect estimmates for each strata.
+#' effect estimates for each strata.
 #'
 #' @keywords GAM strata stratified MR
 #' @param wdata a data frame passed to function containing necessary data for analysis
@@ -21,6 +21,7 @@
 #' @param weights_variable a single string character of the column name for a weights variable
 #' @param sd_outlier_cutoff a single numeric value to define a cutoff value for how many iqr or sd units outlier values
 #' @param sd_or_iqr_cutoff a single string character of "iqr" or "sd" to determine if outlier should be determined by means and sd or medians and iqr.
+#' @param messages should a progress message be printed to screen - binary TRUE or FALSE
 #' @return returns a glsmr object containing the complete linear and GAM models for the full data set, summary statistics for the data, a strata observational table, and a strata TSLS (MR) table.
 #' @importFrom stats na.omit anova quantile sd formula lm fitted.values quantile
 #' @export
@@ -36,7 +37,8 @@ glsmr = function( wdata,
                   rnt_outcome = FALSE,
                   weights_variable = NA,
                   sd_outlier_cutoff = 5,
-                  sd_or_iqr_cutoff = "iqr"){
+                  sd_or_iqr_cutoff = "iqr",
+                  messages = FALSE){
 
   ############################################
   ### 0. look for any errors in parameters
@@ -49,13 +51,15 @@ glsmr = function( wdata,
   ### I. Define Model Data
   ############################################
   # names(outcome) = "outcome"
-  ##
+  if(messages == TRUE){ message("1. Defining model data frame.") }
+
   model_variables = na.omit( c(outcome, exposure, instrument, linear_covariates, smooth_covariates, weights_variable) )
   mod_data = wdata[, c(model_variables)]
 
   ############################################
   ## II. Identify outcome outliers
   ############################################
+  if(messages == TRUE){ message("2. Identifying outliers") }
   outliers = id_outliers( y = mod_data[, outcome], iqr_or_sd = sd_or_iqr_cutoff, number_of_sd_iqr = sd_outlier_cutoff)
 
   # How many outcome outliers
@@ -82,6 +86,7 @@ glsmr = function( wdata,
   ############################################
   ## IV. normality of outcome
   ############################################
+  if(messages == TRUE){ message("3. Estimate Shapiro-Wilk normality W-stat") }
   W_outcome = normW(mod_data[, outcome]); names(W_outcome) = "W_outcome"
 
   ############################################
@@ -93,13 +98,18 @@ glsmr = function( wdata,
   ## V. rank normalize the outcome ?
   ############################################
   if(rnt_outcome == TRUE){
+    if(messages == TRUE){ message("4. Performing rank normal transformation of outcome") }
     mod_data[, outcome] = rntransform( mod_data[, outcome] )
+  } else {
+    if(messages == TRUE){ message("4. No rank normal transformation of outcome performed") }
   }
 
   ######################
   ### VI. Linear model
   ######################
+  if(messages == TRUE){ message("5. running full observational linear model") }
   cvs = na.omit(c(linear_covariates, smooth_covariates))
+  if(length(cvs) == 0){cvs = NA}
   lm_mod = lmfit( wdata = mod_data,
                   dependent = outcome,
                   independent = exposure,
@@ -108,6 +118,7 @@ glsmr = function( wdata,
   ######################
   ### VII. GAM model
   ######################
+  if(messages == TRUE){ message("6. running full observational GAM model") }
   gam_mod = gamfit( wdata = mod_data,
                   dependent = outcome,
                   independent = exposure,
@@ -119,6 +130,7 @@ glsmr = function( wdata,
   ###      exposure is just another parametric
   ###      parameter.
   ####################################
+  if(messages == TRUE){ message("7. running full observational NULL GAM model") }
   gam_mod0 = gamfit( wdata = mod_data,
                     dependent = outcome,
                     independent = NA,
@@ -130,12 +142,14 @@ glsmr = function( wdata,
   ## VIII. ANOVA test of GAM with no
   ##       exposure smooth and full GAM
   ####################################
+  if(messages == TRUE){ message("8. testing non-linearity of observational data: GAM vs NULL GAM") }
   a = anova(gam_mod0$fit, gam_mod$fit, test = "F")
   obs_nonlinearity_test = a[2,3:6]; names(obs_nonlinearity_test) = paste0( "obs_nonlinearity_test_", c("df","deviance","F","P"))
 
   ####################################
   ## IX. Stratify
   ####################################
+  if(messages == TRUE){ message("9. stratifying the data") }
   if(length(strata) == 1){
     q = quantile( mod_data[, exposure], probs = seq(0, 1, 1/strata), na.rm = TRUE )
   } else {
@@ -161,6 +175,7 @@ glsmr = function( wdata,
 
 
   ## estimate exposure summary statistics for samples in each strata
+  if(messages == TRUE){ message("10. estimating strata summary statistics (n, mean, min, max).") }
   exposure_strata_sumstats = t( sapply( 1:length(strata_data), function(i){
     x = strata_data[[i]]
     N = length(x[, exposure])
@@ -175,6 +190,7 @@ glsmr = function( wdata,
   ## X. Run a linear model on each
   ##    strata
   ####################################
+  if(messages == TRUE){ message("11. running observational linear models on each strata") }
   cvs = na.omit(c(linear_covariates, smooth_covariates))
 
   strata_linear_mods = t( sapply(1:length(strata_data), function(i){
@@ -206,6 +222,7 @@ glsmr = function( wdata,
   ######################
   ### XII. IVreg model
   ######################
+  if(messages == TRUE){ message("12. running a full TSLS model with ivreg") }
   cvs = na.omit(c(linear_covariates, smooth_covariates))
 
   iv_fit = ivregfit( wdata = mod_data,
@@ -220,6 +237,7 @@ glsmr = function( wdata,
   ### XIV. Estimate d.hat
   ###      AND beta coefficents
   ######################
+  if(messages == TRUE){ message("13. estimating d.hat (a.k.a IV predicted exposure)") }
   ## Univariate analysis
   form = formula(paste0(exposure, " ~ ", instrument ))
   fit_grs_exp = lm( form , data = mod_data)
@@ -233,12 +251,14 @@ glsmr = function( wdata,
   mod_data$d.hat = temp[m]
 
   ## Univariate Coefficients
+  if(messages == TRUE){ message("14. estimating univariate variance explained for IV on exposure") }
   univariate = summary(fit_grs_exp)$coefficients[instrument,c(1,2,4)]
   names( univariate ) = paste0( "grs_on_exp_", c("beta","se","P") )
 
   ## Multivariate estimate
-  cvs = c(linear_covariates, smooth_covariates)
-  if( length(na.omit( cvs )) > 0 ) {
+  if(messages == TRUE){ message("15. estimating multivariate variance explained for IV on exposure") }
+  cvs = na.omit( c(linear_covariates, smooth_covariates) )
+  if( length( cvs ) > 0 ) {
     form = formula(paste0(exposure, " ~ ", paste0( cvs, collapse = " + ") , " + ", instrument ))
     fit_grs_exp = lm( form , data = mod_data)
     multivariate = summary(fit_grs_exp)$coefficients[instrument,c(1,2,4)]
@@ -259,6 +279,7 @@ glsmr = function( wdata,
   ######################
   ### XIV. IV GAM model
   ######################
+  if(messages == TRUE){ message("16. running full TSLS GAM model") }
   iv_gam_mod = gamfit( wdata = mod_data,
                     dependent = outcome,
                     independent = "d.hat",
@@ -270,6 +291,7 @@ glsmr = function( wdata,
   ###      exposure is just another parametric
   ###      parameter.
   ####################################
+  if(messages == TRUE){ message("17. running full TSLS NULL GAM model") }
   iv_gam_mod0 = gamfit( wdata = mod_data,
                      dependent = outcome,
                      independent = NA,
@@ -281,6 +303,7 @@ glsmr = function( wdata,
   ## XVI ANOVA test of GAM with no
   ##       exposure smooth and full GAM
   ####################################
+  if(messages == TRUE){ message("18. testing non-linearity of TSLS model: GAM vs NULL GAM") }
   a = anova(iv_gam_mod0$fit, iv_gam_mod$fit, test = "F")
   iv_nonlinearity_test = a[2,3:6]; names(iv_nonlinearity_test) = paste0( "iv_nonlinearity_test_", c("df","deviance","F","P"))
 
@@ -288,6 +311,7 @@ glsmr = function( wdata,
   ## XVII. Run a ivreg model on each
   ##      strata
   ####################################
+  if(messages == TRUE){ message("19. running ivreg on each strata") }
   cvs = na.omit(c(linear_covariates, smooth_covariates))
 
   strata_ivreg_mods = t( sapply(1:length(strata_data), function(i){
@@ -326,6 +350,7 @@ glsmr = function( wdata,
   ##      instrument on outcome
   ##       for each strata
   ####################################
+  if(messages == TRUE){ message("20. running a linear model of IV on outcome for each strata") }
   cvs = na.omit(c(linear_covariates, smooth_covariates))
 
   strata_IV_linear_mods = t( sapply(1:length(strata_data), function(i){
@@ -347,6 +372,7 @@ glsmr = function( wdata,
   strata_IV_linear_mods = as.data.frame(strata_IV_linear_mods)
 
   ## derive ratio values
+  if(messages == TRUE){ message("21. deriving MR ratio for each strata") }
   if( !is.na( iv_on_exp_coeff["multivariate", "grs_on_exp_beta"] ) ){
     strata_IV_linear_mods$beta_ratio = strata_IV_linear_mods$beta / iv_on_exp_coeff["multivariate", "grs_on_exp_beta"]
     strata_IV_linear_mods$se_ratio = strata_IV_linear_mods$se / iv_on_exp_coeff["multivariate", "grs_on_exp_beta"]
@@ -366,6 +392,7 @@ glsmr = function( wdata,
   ####################################
   ## RESULTS OUT
   ####################################
+  if(messages == TRUE){ message("22. compiling data to report") }
   names(rnt_outcome) = "outcome_RNTransformed"
   ## summary stats
   ss_out = data.frame( number_of_outcome_outliers = number_of_outcome_outliers,
@@ -401,7 +428,7 @@ glsmr = function( wdata,
              full_iv_gam_model = iv_gam_mod[[1]],
              model_data = mod_data
              )
-
+  if(messages == TRUE){ message("23. returning results to user") }
   return(out)
 
 } ## end of function
