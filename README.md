@@ -26,8 +26,9 @@ This is an R package to aid in determining if observational or two-stage least s
 	          strata = c(17,25,30,62),
 	          rnt_outcome = TRUE,
 	          weights_variable = NA,
-	          sd_outlier_cutoff = 5,
-	          sd_or_iqr_cutoff = "iqr")
+	          outlier_method = "iqr",
+	          outlier_cutoff = 5,
+	          messages = FALSE)
 	
 
 	- NOTE: 'smooth_covariates' will be modeled as smooths or non-linear variables in the GAM, but as typical parametric variables in the linear and tsls analyses. 
