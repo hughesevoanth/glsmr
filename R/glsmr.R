@@ -60,7 +60,7 @@ glsmr = function( wdata,
   ## II. Identify outcome outliers
   ############################################
   if(messages == TRUE){ message("2. Identifying outliers") }
-  outliers = id_outliers( y = mod_data[, outcome], iqr_or_sd = outlier_method, number_of_sd_iqr = outlier_cutoff)
+  outliers = id_outliers( y = mod_data[, outcome], outlier_method = outlier_method, outlier_cutoff = outlier_cutoff)
 
   # How many outcome outliers
   number_of_outcome_outliers = length(outliers); names(number_of_outcome_outliers) = "number_of_outcome_outliers"
@@ -73,7 +73,7 @@ glsmr = function( wdata,
   ############################################
   ## III. Identify exposure outliers
   ############################################
-  outliers = id_outliers( y = mod_data[, exposure], iqr_or_sd = outlier_method, number_of_sd_iqr = outlier_cutoff)
+  outliers = id_outliers( y = mod_data[, exposure], outlier_method = outlier_method, outlier_cutoff = outlier_cutoff)
 
   # How many exposure outliers
   number_of_exposure_outliers = length(outliers); names(number_of_exposure_outliers) = "number_of_exposure_outliers"
