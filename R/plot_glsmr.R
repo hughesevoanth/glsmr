@@ -27,9 +27,9 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   ss = glsmr_obj$summary_stats
 
   ## define variables
-  outcome = ss$outcome
-  exposure = ss$exposure
-  instrument = "d.hat"
+  outcome = as.character( ss$outcome )
+  exposure = as.character(ss$exposure )
+  instrument = as.character( "d.hat" )
   strata_means = glsmr_obj$strata_IV_linear_mods$mean
 
   ## "full data" mean min and max for exposure

@@ -412,7 +412,8 @@ glsmr = function( wdata,
                        iv_nonlinearity_test_F = iv_nonlinearity_test[3],
                        iv_nonlinearity_test_P = iv_nonlinearity_test[4],
                        exposure = exposure,
-                       outcome = outcome )
+                       outcome = outcome, 
+                       stringsAsFactors = FALSE )
   rownames(ss_out) = "sumstats"
 
   out = list(strata_linear_mods = strata_linear_mods,
