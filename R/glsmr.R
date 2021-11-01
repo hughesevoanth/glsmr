@@ -19,8 +19,8 @@
 #'    - The numeric vector example provided will define 4 strata. Lower bound values are inclusive, upper bounds are exclusive, to the exception of the last bounding value.
 #' @param rnt_outcome binary TRUE or FALSE if the dependent or response variable should be rank normal transformed.
 #' @param weights_variable a single string character of the column name for a weights variable
-#' @param sd_outlier_cutoff a single numeric value to define a cutoff value for how many iqr or sd units outlier values
-#' @param sd_or_iqr_cutoff a single string character of "iqr" or "sd" to determine if outlier should be determined by means and sd or medians and iqr.
+#' @param outlier_cutoff a single numeric value to define a cutoff value for how many iqr or sd units outlier values
+#' @param outlier_method a single string character of "iqr" or "sd" to determine if outlier should be determined by means and sd or medians and iqr.
 #' @param messages should a progress message be printed to screen - binary TRUE or FALSE
 #' @return returns a glsmr object containing the complete linear and GAM models for the full data set, summary statistics for the data, a strata observational table, and a strata TSLS (MR) table.
 #' @importFrom stats na.omit anova quantile sd formula lm fitted.values quantile
@@ -36,8 +36,8 @@ glsmr = function( wdata,
                   strata = 4,
                   rnt_outcome = FALSE,
                   weights_variable = NA,
-                  sd_outlier_cutoff = 5,
-                  sd_or_iqr_cutoff = "iqr",
+                  outlier_method = "iqr",
+                  outlier_cutoff = 5,
                   messages = FALSE){
 
   ############################################
@@ -60,7 +60,7 @@ glsmr = function( wdata,
   ## II. Identify outcome outliers
   ############################################
   if(messages == TRUE){ message("2. Identifying outliers") }
-  outliers = id_outliers( y = mod_data[, outcome], iqr_or_sd = sd_or_iqr_cutoff, number_of_sd_iqr = sd_outlier_cutoff)
+  outliers = id_outliers( y = mod_data[, outcome], iqr_or_sd = outlier_method, number_of_sd_iqr = outlier_cutoff)
 
   # How many outcome outliers
   number_of_outcome_outliers = length(outliers); names(number_of_outcome_outliers) = "number_of_outcome_outliers"
@@ -73,7 +73,7 @@ glsmr = function( wdata,
   ############################################
   ## III. Identify exposure outliers
   ############################################
-  outliers = id_outliers( y = mod_data[, exposure], iqr_or_sd = sd_or_iqr_cutoff, number_of_sd_iqr = sd_outlier_cutoff)
+  outliers = id_outliers( y = mod_data[, exposure], iqr_or_sd = outlier_method, number_of_sd_iqr = outlier_cutoff)
 
   # How many exposure outliers
   number_of_exposure_outliers = length(outliers); names(number_of_exposure_outliers) = "number_of_exposure_outliers"

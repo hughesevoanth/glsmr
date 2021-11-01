@@ -14,8 +14,8 @@ glsmr(
   strata = 4,
   rnt_outcome = FALSE,
   weights_variable = NA,
-  sd_outlier_cutoff = 5,
-  sd_or_iqr_cutoff = "iqr",
+  outlier_method = "iqr",
+  outlier_cutoff = 5,
   messages = FALSE
 )
 }
@@ -42,9 +42,9 @@ glsmr(
 
 \item{weights_variable}{a single string character of the column name for a weights variable}
 
-\item{sd_outlier_cutoff}{a single numeric value to define a cutoff value for how many iqr or sd units outlier values}
+\item{outlier_method}{a single string character of "iqr" or "sd" to determine if outlier should be determined by means and sd or medians and iqr.}
 
-\item{sd_or_iqr_cutoff}{a single string character of "iqr" or "sd" to determine if outlier should be determined by means and sd or medians and iqr.}
+\item{outlier_cutoff}{a single numeric value to define a cutoff value for how many iqr or sd units outlier values}
 
 \item{messages}{should a progress message be printed to screen - binary TRUE or FALSE}
 }

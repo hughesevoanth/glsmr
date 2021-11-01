@@ -4,14 +4,14 @@
 \alias{id_outliers}
 \title{Identify outliers using mean and SD or median and interquartile range}
 \usage{
-id_outliers(y, iqr_or_sd = "iqr", number_of_sd_iqr = 5)
+id_outliers(y, outlier_method = "iqr", outlier_cutoff = 5)
 }
 \arguments{
 \item{y}{a numeric vector from which outlier indexes will be identified.}
 
-\item{iqr_or_sd}{a single string character of "iqr" or "sd" to determine if outlier should be determined by means and sd or medians and iqr.}
+\item{outlier_method}{a single string character of "iqr" or "sd" to determine if outlier should be determined by means and sd or medians and iqr.}
 
-\item{number_of_sd_iqr}{a single numeric value to define a cutoff value for how many iqr or sd units outlier values.}
+\item{outlier_cutoff}{a single numeric value to define a cutoff value for how many iqr or sd units outlier values.}
 }
 \value{
 returns vector indicating the index of an outlier(s).
