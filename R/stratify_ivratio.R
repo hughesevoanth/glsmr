@@ -39,7 +39,7 @@ stratify_ivratio = function( strata_beta_ie, strata_beta_io, beta_ie, strata_exp
   df = cbind(df, strata_exp_ss)
 
   temp = tsls_ss["beta_iv", c("n","beta","se","beta","se","P","N","mean","min","max","sd")]
-  names(temp) = names(iv_strata_ratio)
+  names(temp) = names(df)
   df = rbind(df, fulldata = temp)
 
   return(df)
