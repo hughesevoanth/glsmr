@@ -21,7 +21,7 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   ## I. Prepare SumStats for plots
   #############################
   ## plot data
-  pdata = na.omit(glsmr_obj$model_data)
+  pdata = na.omit(glsmr_obj$summary_tables$model_data)
 
   ## table of summary statistics
   ss = glsmr_obj$summary_stats
@@ -29,86 +29,58 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   ## define variables
   outcome = as.character( ss$outcome )
   exposure = as.character(ss$exposure )
-  instrument = as.character( "d.hat" )
-  strata_means = glsmr_obj$strata_IV_linear_mods$mean
+  instrument = as.character( ss$instrument )
+  iv = as.character( "iv_predicted_exposure" )
 
-  ## "full data" mean min and max for exposure
-  fd_exp_mean = mean( pdata[, exposure], na.rm = TRUE)
-  fd_exp_min = min( pdata[, exposure], na.rm = TRUE)
-  fd_exp_max = max( pdata[, exposure], na.rm = TRUE)
-
-  ## "full data" mean min and max for d.hat
-  fd_dhat_mean = mean( pdata[, instrument], na.rm = TRUE)
-  fd_dhat_min = min( pdata[, instrument], na.rm = TRUE)
-  fd_dhat_max = max( pdata[, instrument], na.rm = TRUE)
-
-  ## "full data" mean for outcome
-  fd_outcome_mean = mean( pdata[, outcome], na.rm = TRUE)
-
-  ## FORMAT P values for the linear vs non-linear F test
-  obs_nonlinear_P = as.numeric( ss$obs_nonlinearity_test_P )
-  obs_nonlinear_P = formatC(obs_nonlinear_P, format = "e", digits = 2)
-
-  MR_nonlinear_P = as.numeric( ss$iv_nonlinearity_test_P )
-  MR_nonlinear_P = formatC(MR_nonlinear_P, format = "e", digits = 2)
-
-  ## Extract full observational model linear estimates
-  l_est = summary(glsmr_obj$full_linear_model)$coef[exposure,]
-  l_est = formatC(l_est, format = "e", digits = 2)
-
-  ## Extract full ivreg (TSLS | MR) estimates
-  iv_est = summary(glsmr_obj$full_ivreg_model )$coefficients[exposure,]
-  iv_est = formatC(iv_est, format = "e", digits = 2)
+  ## summary statistics for strata and full data models
+  obs_strata_ss = glsmr_obj$summary_tables$observational_sumstats
+  tsls_strata_ratio_ss = glsmr_obj$summary_tables$strata_tsls_ratio_sumstats
+  tsls_strata_ivreg_ss = glsmr_obj$summary_tables$strata_tsls_ivreg_sumstats
 
   #############################
   ## II. Prepare data for strata
   ##      point estimate plots
   #############################
-  ## linear estimate data
-  ldata = glsmr_obj$strata_linear_mods[, c("beta","se","P","mean", "min","max")]
-        ## defining the mean for min and max here as a geom_rect() plotting work around
-  ldata = rbind(ldata, c(as.numeric(l_est[c(1,2,4)]), fd_exp_mean, fd_exp_mean, fd_exp_mean))
-  ldata$data = "strata"
-  ldata$data[nrow(ldata)] = "complete data set"
-  ldata$data = as.factor(ldata$data)
-  ldata$data = factor(ldata$data, levels = unique( ldata$data ) )
+  ## Observational table
+  obs_strata_ss$sig = ifelse(obs_strata_ss$P <= 0.05, "1", "0"  )
+  obs_strata_ss$sig = factor(obs_strata_ss$sig, levels = c("0","1"))
+  obs_strata_ss$strataID = rownames(obs_strata_ss); obs_strata_ss$strataID[nrow(obs_strata_ss)] = "complete data set"
+  obs_strata_ss$strataID = factor(obs_strata_ss$strataID, levels = obs_strata_ss$strataID)
+  obs_strata_ss$shape = "strata"; obs_strata_ss$shape[nrow(obs_strata_ss)] = "complete data set"
+  obs_strata_ss$shape = factor(obs_strata_ss$shape, levels = c("strata","complete data set") )
+  obs_strata_ss["fulldata","min"] = obs_strata_ss["fulldata","mean"]
+  obs_strata_ss["fulldata","max"] = obs_strata_ss["fulldata","mean"]
+  ## RATIO TABLE
+  tsls_strata_ratio_ss$sig = ifelse(tsls_strata_ratio_ss$P <= 0.05, "1", "0"  )
+  tsls_strata_ratio_ss$sig = factor(tsls_strata_ratio_ss$sig, levels = c("0","1"))
+  tsls_strata_ratio_ss$strataID = rownames(tsls_strata_ratio_ss); tsls_strata_ratio_ss$strataID[nrow(tsls_strata_ratio_ss)] = "complete data set"
+  tsls_strata_ratio_ss$strataID = factor(tsls_strata_ratio_ss$strataID, levels = tsls_strata_ratio_ss$strataID)
+  tsls_strata_ratio_ss$shape = "strata"; tsls_strata_ratio_ss$shape[nrow(tsls_strata_ratio_ss)] = "complete data set"
+  tsls_strata_ratio_ss$shape = factor(tsls_strata_ratio_ss$shape, levels = c("strata","complete data set") )
+  tsls_strata_ratio_ss["fulldata","min"] = tsls_strata_ratio_ss["fulldata","mean"]
+  tsls_strata_ratio_ss["fulldata","max"] = tsls_strata_ratio_ss["fulldata","mean"]
+  ## IVREG TABLE
+  tsls_strata_ivreg_ss$sig = ifelse(tsls_strata_ivreg_ss$P <= 0.05, "1", "0"  )
+  tsls_strata_ivreg_ss$sig = factor(tsls_strata_ivreg_ss$sig, levels = c("0","1"))
+  tsls_strata_ivreg_ss$strataID = rownames(tsls_strata_ivreg_ss); tsls_strata_ivreg_ss$strataID[nrow(tsls_strata_ivreg_ss)] = "complete data set"
+  tsls_strata_ivreg_ss$strataID = factor(tsls_strata_ivreg_ss$strataID, levels = tsls_strata_ivreg_ss$strataID)
+  tsls_strata_ivreg_ss$shape = "strata"; tsls_strata_ivreg_ss$shape[nrow(tsls_strata_ivreg_ss)] = "complete data set"
+  tsls_strata_ivreg_ss$shape = factor(tsls_strata_ivreg_ss$shape, levels = c("strata","complete data set") )
+  tsls_strata_ivreg_ss["fulldata","min"] = tsls_strata_ivreg_ss["fulldata","mean"]
+  tsls_strata_ivreg_ss["fulldata","max"] = tsls_strata_ivreg_ss["fulldata","mean"]
 
-  ldata = ldata %>% mutate(sig = ifelse(P<0.05, "1", "0") )
-  ldata$sig = factor(ldata$sig, levels = c("0","1"))
+  ## "full data" mean min and max for exposure
+  fd_exp_mean = mean( pdata[, exposure], na.rm = TRUE)
 
-  ldata$strataID = rownames(ldata); ldata$strataID[nrow(ldata)] = "complete data set"
-  ldata$strataID = factor(ldata$strataID, levels = ldata$strataID)
+  ## "full data" mean min and max for d.hat
+  fd_dhat_mean = mean( pdata[, iv], na.rm = TRUE)
 
-  ## ivreg estimate data
-  ivdata = glsmr_obj$strata_ivreg_mods[, c("beta","se","P","mean", "min","max")]
-        ## defining the mean for min and max here as a geom_rect() plotting work around
-  ivdata = rbind(ivdata, c(as.numeric(iv_est[c(1,2,4)]), fd_exp_mean, fd_exp_mean, fd_exp_mean))
-  ivdata$data = "strata"
-  ivdata$data[nrow(ivdata)] = "complete data set"
-  ivdata$data = as.factor(ivdata$data)
-  ivdata$data = factor(ivdata$data, levels = unique( ivdata$data ) )
+  ## "full data" mean for outcome
+  fd_outcome_mean = mean( pdata[, outcome], na.rm = TRUE)
 
-  ivdata = ivdata %>% mutate(sig = ifelse(P<0.05, "1", "0") )
-  ivdata$sig = factor(ivdata$sig, levels = c("0","1"))
-
-  ivdata$strataID = rownames(ivdata); ivdata$strataID[nrow(ivdata)] = "complete data set"
-  ldata$strataID = factor(ldata$strataID, levels = ldata$strataID)
-
-  ## linear IV estimate data: instrument-on-outcome / instrument-on-exposure
-  l_iv_data = glsmr_obj$strata_IV_linear_mods[, c("beta_ratio","se_ratio","P","mean", "min","max")]
-  colnames(l_iv_data) = c("beta","se","P","mean", "min","max")
-      ## defining the mean for min and max here as a geom_rect() plotting work around
-  l_iv_data = rbind(l_iv_data, c(as.numeric(iv_est[c(1,2,4)]), fd_exp_mean, fd_exp_mean, fd_exp_mean))
-  l_iv_data$data = "strata"
-  l_iv_data$data[nrow(l_iv_data)] = "complete data set"
-  l_iv_data$data = as.factor(l_iv_data$data)
-  l_iv_data$data = factor(l_iv_data$data, levels = unique( l_iv_data$data ) )
-
-  l_iv_data = l_iv_data %>% mutate(sig = ifelse(P<0.05, "1", "0") )
-  l_iv_data$sig = factor(l_iv_data$sig, levels = c("0","1"))
-
-  l_iv_data$strataID = rownames(l_iv_data); l_iv_data$strataID[nrow(l_iv_data)] = "complete data set"
-  l_iv_data$strataID = factor(l_iv_data$strataID, levels = l_iv_data$strataID)
+  ## FORMAT P values for the linear vs non-linear F test
+  obs_nonlinear_P = formatC( glsmr_obj$summary_tables$nonlinearity_test["obs", "P"] , format = "e", digits = 2)
+  MR_nonlinear_P = formatC( glsmr_obj$summary_tables$nonlinearity_test["tsls", "P"] , format = "e", digits = 2)
 
   #############################
   ## III. PLOT linear non-linear
@@ -122,7 +94,7 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
     geom_smooth( method = "lm", formula = y~x, color = "black", se = TRUE ) +
     geom_smooth( method = "gam", formula = y~s(x), color = "blue", se = TRUE ) +
     geom_point( x = fd_exp_mean , y = fd_outcome_mean , size = 3, color = "darkorange1", shape = 15 ) +
-    geom_vline(xintercept = strata_means, color = "grey20", linetype = "dashed") +
+    geom_vline(xintercept = obs_strata_ss$mean[ -length(obs_strata_ss$mean) ], color = "grey20", linetype = "dashed") +
     labs(title = "observational relationship",
          subtitle = paste0( "non-linear GAM a better fit? P = ", obs_nonlinear_P) ) +
     theme_bw()
@@ -130,7 +102,7 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   ## ADD strata color boundries
   if(add_strata_2_curves == TRUE){
     o_lnl_plot = o_lnl_plot +
-      geom_rect(data = ldata[1:(nrow(ldata)-1),],
+      geom_rect(data = obs_strata_ss[1:(nrow(obs_strata_ss)-1),],
                 aes(x = NULL, y = NULL,
                     xmin = min, xmax = max,
                     ymin = -Inf, ymax = Inf,
@@ -139,11 +111,11 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
       scale_fill_brewer(palette = brewer_col)
   }
 
-  iv_lnl_plot = pdata %>% ggplot(aes_string(x = instrument, y = outcome)) +
+  iv_lnl_plot = pdata %>% ggplot(aes_string(x = iv, y = outcome)) +
     geom_smooth( method = "lm", formula = y~x, color = "black", se = TRUE ) +
     geom_smooth( method = "gam", formula = y~s(x), color = "blue", se = TRUE ) +
     geom_point( aes(x = fd_dhat_mean , y = fd_outcome_mean) , size = 3, color = "darkorange1", shape = 15 ) +
-    geom_vline(xintercept = strata_means, color = "grey20", linetype = "dashed") +
+    geom_vline(xintercept = tsls_strata_ratio_ss$mean[ -length(tsls_strata_ratio_ss$mean) ], color = "grey20", linetype = "dashed") +
     labs(title = "MR relationship", x = paste0("genotype predicted ", exposure),
          subtitle = paste0( "non-linear GAM a better fit? P = ", MR_nonlinear_P) ) +
     theme_bw()
@@ -151,7 +123,7 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   ## ADD strata color boundries
   if(add_strata_2_curves == TRUE){
     iv_lnl_plot = iv_lnl_plot +
-      geom_rect(data = ldata[1:(nrow(ldata)-1),],
+      geom_rect(data = tsls_strata_ratio_ss[ 1:(nrow(tsls_strata_ratio_ss)-1) , ],
                 aes(x = NULL, y = NULL,
                     xmin = min, xmax = max,
                     ymin = -Inf, ymax = Inf,
@@ -166,48 +138,52 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
   #############################
   ## Strata point estimates
   if(add_strata_2_points == TRUE){
-    l_est_plot = ldata %>%
+    l_est_plot = obs_strata_ss %>%
       ggplot(aes(x = mean, y = beta)) +
-      geom_rect(aes(xmin = min, xmax = max, ymin = -Inf, ymax = Inf, fill = strataID), alpha = 0.2) +
+      geom_rect(data = obs_strata_ss[1:(nrow(tsls_strata_ratio_ss)-1),],
+                aes(xmin = min, xmax = max, ymin = -Inf, ymax = Inf, fill = strataID),
+                alpha = 0.2) +
       scale_fill_brewer(palette = brewer_col) +
-      geom_errorbar( aes(ymin=beta-se, ymax=beta+se), width = 0.2 ) +
-      geom_point(aes(color = sig, shape = data ) , size = 3) +
+      geom_errorbar( aes(ymin=beta-(1.96*se), ymax=beta+(1.96*se)), width = 0.2 ) +
+      geom_point(aes(color = sig, shape = shape ) , size = 3) +
       scale_color_manual(values = c("black","red"), drop = FALSE) +
       scale_shape_manual(values = c(19,22) ) +
       geom_hline(yintercept = 0, size = 1, color = "black", linetype = "dashed" ) +
       labs(x = "mean of exposure strata", title = "observational strata estimates") +
       theme_bw()
 
-    iv_est_plot = l_iv_data %>%
-      ggplot(aes(x = mean, y = beta)) +
-      geom_rect(aes(xmin = min, xmax = max, ymin = -Inf, ymax = Inf, fill = strataID), alpha = 0.2) +
+    iv_est_plot = tsls_strata_ratio_ss %>%
+      ggplot(aes(x = mean, y = beta_iv)) +
+      geom_rect(data = tsls_strata_ratio_ss[1:(nrow(tsls_strata_ratio_ss)-1),],
+                aes(xmin = min, xmax = max, ymin = -Inf, ymax = Inf, fill = strataID),
+                alpha = 0.2) +
       scale_fill_brewer(palette = brewer_col) +
-      geom_errorbar( aes(ymin=beta-se, ymax=beta+se), width = 0.2 ) +
-      geom_point(aes(color = sig, shape = data  ) , size = 3) +
+      geom_errorbar( aes(ymin=beta_iv-(1.96*se_iv), ymax=beta_iv+(1.96*se_iv)), width = 0.2 ) +
+      geom_point(aes(color = sig, shape = shape  ) , size = 3) +
       scale_color_manual(values = c("black","red"), drop = FALSE) +
       scale_shape_manual(values = c(19,22) ) +
       geom_hline(yintercept = 0, size = 1, color = "black", linetype = "dashed" ) +
-      labs(x = "mean of exposure strata", title = "tsls MR strata estimates") +
+      labs(x = "mean of exposure strata", y = "beta" ,title = "tsls MR strata estimates") +
       theme_bw()
   } else {
-    l_est_plot = ldata %>%
+    l_est_plot = obs_strata_ss %>%
       ggplot(aes(x = mean, y = beta)) +
-      geom_errorbar( aes(ymin=beta-se, ymax=beta+se), width = 0.2 ) +
-      geom_point(aes(color = sig, shape = data ) , size = 3) +
+      geom_errorbar( aes(ymin=beta-(1.96*se), ymax=beta+(1.96*se)), width = 0.2 ) +
+      geom_point(aes(color = sig, shape = shape ) , size = 3) +
       scale_color_manual(values = c("black","red"), drop = FALSE) +
       scale_shape_manual(values = c(19,22) ) +
       geom_hline(yintercept = 0, size = 1, color = "black", linetype = "dashed" ) +
       labs(x = "mean of exposure strata", title = "observational strata estimates") +
       theme_bw()
 
-    iv_est_plot = l_iv_data %>%
-      ggplot(aes(x = mean, y = beta)) +
-      geom_errorbar( aes(ymin=beta-se, ymax=beta+se), width = 0.2 ) +
-      geom_point(aes(color = sig, shape = data  ) , size = 3) +
+    iv_est_plot = tsls_strata_ratio_ss %>%
+      ggplot(aes(x = mean, y = beta_iv)) +
+      geom_errorbar( aes(ymin=beta_iv-(1.96*se_iv), ymax=beta_iv+(1.96*se_iv)), width = 0.2 ) +
+      geom_point(aes(color = sig, shape = shape  ) , size = 3) +
       scale_color_manual(values = c("black","red"), drop = FALSE) +
       scale_shape_manual(values = c(19,22) ) +
       geom_hline(yintercept = 0, size = 1, color = "black", linetype = "dashed" ) +
-      labs(x = "mean of exposure strata", title = "tsls MR strata estimates") +
+      labs(x = "mean of exposure strata", y = "beta", title = "tsls MR strata estimates") +
       theme_bw()
   }
 

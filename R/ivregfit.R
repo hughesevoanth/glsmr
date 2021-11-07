@@ -56,6 +56,9 @@ ivregfit = function( wdata,
   res = residuals(iv_mod)
   iv_n = length(res); names(iv_n) = "n"
 
+  ## normality of residuals
+  W = normW(res)
+
   ## IV summary
   s = summary(iv_mod)
   ## model coefficients
@@ -63,7 +66,7 @@ ivregfit = function( wdata,
   ## Report beta, se, t-value, and P-value
   iv_estimates = iv_coef[exposure,]; names(iv_estimates) = c("beta","se","tval","P")
   ## R-squared
-  iv_rsq = s$r.squared; names(iv_rsq) = "Rsq"
+  iv_rsq = s$r.squared; names(iv_rsq) = "rsq"
   ## Wald Test for
   iv_wald = s$waldtest[c(1,3,4,2)]
   names(iv_wald) = c("Wald_stat","Wald_df1","Wald_df2","Wald_P")
@@ -80,7 +83,7 @@ ivregfit = function( wdata,
   ## V. Linear model data out
   ######################
   iv_out = list(fit = iv_mod,
-                summary = c(iv_n, iv_rsq, iv_wald, iv_Ftest, iv_Wu_Hausman, iv_estimates) )
+                summary = c(iv_n, W, iv_rsq, iv_wald, iv_Ftest, iv_Wu_Hausman, iv_estimates) )
 
   return(iv_out)
 

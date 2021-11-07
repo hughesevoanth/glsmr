@@ -4,13 +4,7 @@
 \alias{lmfit}
 \title{linear model fitting}
 \usage{
-lmfit(
-  wdata,
-  dependent = NA,
-  independent = NA,
-  covariates = NA,
-  rnt_dependent = FALSE
-)
+lmfit(wdata, dependent, independent, covariates, rnt_dependent = FALSE)
 }
 \arguments{
 \item{wdata}{a data frame passed to function containing necessary data for analysis}

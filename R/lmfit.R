@@ -13,9 +13,9 @@
 #' @examples
 #' lmfit()
 lmfit = function( wdata,
-                  dependent = NA,
-                  independent = NA,
-                  covariates = NA,
+                  dependent,
+                  independent,
+                  covariates,
                   rnt_dependent = FALSE){
 
   ############################################
