@@ -115,22 +115,22 @@ plot_glsmr = function( glsmr_obj, add_strata_2_curves = FALSE, add_strata_2_poin
     geom_smooth( method = "lm", formula = y~x, color = "black", se = TRUE ) +
     geom_smooth( method = "gam", formula = y~s(x), color = "blue", se = TRUE ) +
     geom_point( aes(x = fd_dhat_mean , y = fd_outcome_mean) , size = 3, color = "darkorange1", shape = 15 ) +
-    geom_vline(xintercept = tsls_strata_ratio_ss$mean[ -length(tsls_strata_ratio_ss$mean) ], color = "grey20", linetype = "dashed") +
+    # geom_vline(xintercept = tsls_strata_ratio_ss$mean[ -length(tsls_strata_ratio_ss$mean) ], color = "grey20", linetype = "dashed") +
     labs(title = "MR relationship", x = paste0("genotype predicted ", exposure),
          subtitle = paste0( "non-linear GAM a better fit? P = ", MR_nonlinear_P) ) +
     theme_bw()
 
   ## ADD strata color boundries
-  if(add_strata_2_curves == TRUE){
-    iv_lnl_plot = iv_lnl_plot +
-      geom_rect(data = tsls_strata_ratio_ss[ 1:(nrow(tsls_strata_ratio_ss)-1) , ],
-                aes(x = NULL, y = NULL,
-                    xmin = min, xmax = max,
-                    ymin = -Inf, ymax = Inf,
-                    fill = strataID ),
-                alpha = 0.2 ) +
-      scale_fill_brewer(palette = brewer_col)
-  }
+  # if(add_strata_2_curves == TRUE){
+  #   iv_lnl_plot = iv_lnl_plot +
+  #     geom_rect(data = tsls_strata_ratio_ss[ 1:(nrow(tsls_strata_ratio_ss)-1) , ],
+  #               aes(x = NULL, y = NULL,
+  #                   xmin = min, xmax = max,
+  #                   ymin = -Inf, ymax = Inf,
+  #                   fill = strataID ),
+  #               alpha = 0.2 ) +
+  #     scale_fill_brewer(palette = brewer_col)
+  # }
 
   #############################
   ## IV. PLOT strata point
