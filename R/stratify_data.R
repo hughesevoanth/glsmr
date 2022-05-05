@@ -5,14 +5,14 @@
 #' @keywords stratify
 #' @param wdata a data frame passed to function containing necessary data for analysis
 #' @param stratify_on column name to identify the variable to stratify on
-#' @param strata a string or vector to define how strata should be defined.
+#' @param strata a string or vector to define how strata should be defined.Defaulted to 4 bins or quartiles.
 #' @return returns
 #' @export
 #' @examples
 #' stratify_data()
 stratify_data = function( wdata,
                   stratify_on,
-                  strata ){
+                  strata = 4 ){
 
 
   if(length(strata) == 1){

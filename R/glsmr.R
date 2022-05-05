@@ -12,9 +12,9 @@
 #' @param instrument a data frame passed to function containing necessary data for analysis
 #' @param linear_covariates a vector of string(s) that are also column names used to define variables that will be set as parametric (linear) covariates.
 #' @param smooth_covariates a vector of string(s) that are also column names used to define variables that will be set as non-linear (smooth, s()) covariates.
-#' @param strata a string or vector to define how strata should be defined.
-#' * `strata = quartiles`: automatically identifies quartiles or 4 equally sized strata
-#' * `strata = decile`: automatically identifies deciles or 10 equally sized strata
+#' @param strata a single integer or vector to define how strata should be defined.
+#' * `strata = 4`: will define quartiles or 4 evenly sized bins
+#' * `strata = 10`: will define deciles or 10 evenly sized bins
 #' * `strata = c(1,10,20,30)`: a user defined numeric vector to define boundaries for each strata.
 #'    - The numeric vector example provided will define 4 strata. Lower bound values are inclusive, upper bounds are exclusive, to the exception of the last bounding value.
 #' @param rnt_outcome binary TRUE or FALSE if the dependent or response variable should be rank normal transformed.
@@ -55,7 +55,8 @@ glsmr = function( wdata,
   if(messages == TRUE){ message("1. Defining model data frame.") }
 
   model_variables = na.omit( c(outcome, exposure, instrument, linear_covariates, smooth_covariates, weights_variable) )
-  mod_data = wdata[, c(model_variables)]
+  # mod_data = na.omit( wdata[, c(model_variables)] )
+  mod_data =  wdata[, c(model_variables)]
 
   ############################################
   ## PART I: 2. define covariates
@@ -111,6 +112,15 @@ glsmr = function( wdata,
     if(messages == TRUE){ message("4. No rank normal transformation of outcome performed") }
   }
 
+  ############################################
+  ## PART I: 8. Derive IV-Free Exposure
+  ############################################
+  form = formula(paste0( exposure , "~", instrument  ) )
+  fit = lm(form, data = mod_data)
+  res = residuals(fit) + mean(mod_data[, exposure], na.rm = TRUE)
+  m = match(rownames(mod_data), names(res))
+  mod_data$iv_free_exposure = res[m]
+
   ## PART II: OBSERVATIONAL MODELING
   ############################################
   ### PART II: 1. null GAM model
@@ -122,7 +132,6 @@ glsmr = function( wdata,
                      independent = NA,
                      linear_covariates = c(linear_covariates, exposure),
                      smooth_covariates = smooth_covariates)
-
 
   ############################################
   ### PART II: 2. full GAM model
@@ -173,7 +182,7 @@ glsmr = function( wdata,
   ## PART II: 7. Stratify data by Exposure
   ############################################
   if(messages == TRUE){ message("9. stratifying the observational data by exposure") }
-  strata_data = stratify_data( wdata = mod_data, stratify_on = exposure, strata = strata )
+  strata_data = stratify_data( wdata = mod_data, stratify_on = "iv_free_exposure", strata = strata )
 
   ############################################
   ## PART II: 8. Summary Statistics for exposure
