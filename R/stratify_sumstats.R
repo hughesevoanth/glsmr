@@ -9,10 +9,14 @@
 #' @export
 #' @examples
 #' stratify_sumstats()
-stratify_sumstats = function( wdata, exposure){
+stratify_sumstats = function( wdata, exposure, model_vars = c(outcome, exposure) ){
 
   df_out = t( sapply( 1:length(wdata), function(i){
+    ## Define data set
     x = wdata[[i]]
+    ## remove NAs
+    x = na.omit(x[, model_vars ])
+    ##
     N = length(x[, exposure])
     r = range(x[, exposure], na.rm = TRUE)
     m = mean(x[, exposure], na.rm = TRUE)
