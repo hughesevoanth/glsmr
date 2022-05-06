@@ -16,7 +16,8 @@ glsmr(
   weights_variable = NA,
   outlier_method = "iqr",
   outlier_cutoff = 5,
-  messages = FALSE
+  messages = FALSE,
+  return_models = FALSE
 )
 }
 \arguments{
@@ -32,9 +33,9 @@ glsmr(
 
 \item{smooth_covariates}{a vector of string(s) that are also column names used to define variables that will be set as non-linear (smooth, s()) covariates.}
 
-\item{strata}{a string or vector to define how strata should be defined.
-* `strata = quartiles`: automatically identifies quartiles or 4 equally sized strata
-* `strata = decile`: automatically identifies deciles or 10 equally sized strata
+\item{strata}{a single integer or vector to define how strata should be defined.
+* `strata = 4`: will define quartiles or 4 evenly sized bins
+* `strata = 10`: will define deciles or 10 evenly sized bins
 * `strata = c(1,10,20,30)`: a user defined numeric vector to define boundaries for each strata.
    - The numeric vector example provided will define 4 strata. Lower bound values are inclusive, upper bounds are exclusive, to the exception of the last bounding value.}
 
@@ -47,6 +48,8 @@ glsmr(
 \item{outlier_cutoff}{a single numeric value to define a cutoff value for how many iqr or sd units outlier values}
 
 \item{messages}{should a progress message be printed to screen - binary TRUE or FALSE}
+
+\item{return_models}{should the model data data frame and each gam and linear model be returned (TRUE or FALSE). Default is FALSE.}
 }
 \value{
 returns a glsmr object containing the complete linear and GAM models for the full data set, summary statistics for the data, a strata observational table, and a strata TSLS (MR) table.
