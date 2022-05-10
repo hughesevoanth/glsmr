@@ -4,14 +4,14 @@
 \alias{stratify_data}
 \title{stratify data}
 \usage{
-stratify_data(wdata, stratify_on, strata)
+stratify_data(wdata, stratify_on, strata = 4)
 }
 \arguments{
 \item{wdata}{a data frame passed to function containing necessary data for analysis}
 
 \item{stratify_on}{column name to identify the variable to stratify on}
 
-\item{strata}{a string or vector to define how strata should be defined.}
+\item{strata}{a string or vector to define how strata should be defined.Defaulted to 4 bins or quartiles.}
 }
 \value{
 returns

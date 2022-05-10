@@ -80,10 +80,35 @@ ivregfit = function( wdata,
   names(iv_Wu_Hausman) = c("WuH_stat","WuH_df1","WuH_df2","WuH_P")
 
   ######################
+  ## V. Exposure summary stats
+  ######################
+  ex = iv_mod$model[, exposure]
+  n = length(ex)
+  mean = mean(ex)
+  min = min(ex)
+  max = max(ex)
+  sd = sd(ex)
+  exposure_stats = c(n, mean, min, max, sd)
+  names(exposure_stats) = paste0("exposure_", c("n","mean","min","max","sd") )
+
+  ######################
+  ## V. Outcome summary stats
+  ######################
+  ex = iv_mod$model[, outcome]
+  n = length(ex)
+  mean = mean(ex)
+  min = min(ex)
+  max = max(ex)
+  sd = sd(ex)
+  outcome_stats = c(n, mean, min, max, sd)
+  names(outcome_stats) = paste0("outcome_", c("n","mean","min","max","sd") )
+
+
+  ######################
   ## V. Linear model data out
   ######################
   iv_out = list(fit = iv_mod,
-                summary = c(iv_n, W, iv_rsq, iv_wald, iv_Ftest, iv_Wu_Hausman, iv_estimates) )
+                summary = c(iv_n, W, iv_rsq, iv_wald, iv_Ftest, iv_Wu_Hausman, iv_estimates, exposure_stats, outcome_stats) )
 
   return(iv_out)
 

@@ -4,7 +4,7 @@
 \alias{stratify_sumstats}
 \title{summary statistics for the exposure within each strata}
 \usage{
-stratify_sumstats(wdata, exposure)
+stratify_sumstats(wdata, exposure, model_vars = c(outcome, exposure))
 }
 \arguments{
 \item{wdata}{a data frame passed to function containing necessary data for analysis}

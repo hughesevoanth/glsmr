@@ -8,7 +8,11 @@ plot_glsmr(
   glsmr_obj,
   add_strata_2_curves = FALSE,
   add_strata_2_points = FALSE,
-  brewer_col = "Set1"
+  brewer_col = "Set1",
+  old_plot_scheme = FALSE,
+  old_GAM_smooths = FALSE,
+  plot_obs_res_betas = FALSE,
+  pval_thresh = 0.05
 )
 }
 \arguments{
@@ -19,6 +23,14 @@ plot_glsmr(
 \item{add_strata_2_points}{binary TRUE or FALSE if strata boundaries should be illustrated to dot plots}
 
 \item{brewer_col}{a brewer.pal color palette string}
+
+\item{old_plot_scheme}{set to TRUE to get an older version of the plot}
+
+\item{old_GAM_smooths}{binary TRUE or FALSE. The Default is FALSE. If TRUE the linear and GAM smooths will be derived from the complete data set and the geom_smooth() function of ggplot2, not from predicted values derived from the fitted models.}
+
+\item{plot_obs_res_betas}{set to TRUE to plot GAM residualized effect estimates for observational data}
+
+\item{pval_thresh}{The pvalue threshold to use to indicate which point estimates indicate an association between exposure and outcome. The default value is 0.05.}
 }
 \value{
 ggplot figure

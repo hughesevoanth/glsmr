@@ -28,7 +28,7 @@ stratify_lmfit = function( wdata, outcome, exposure, covariates){
                       independent = exposure,
                       covariates = covariates)
     }else{
-      o = rep(NA, 10); names(o) = c("n","W","Rsq","Fstat","df","dendf","beta","se","tval","P")
+      o = rep(NA, 15); names(o) = c("n","W","Rsq","Fstat","df","dendf","beta","se","tval","P")
       lm_mod = list(summary = o)
     }
 
