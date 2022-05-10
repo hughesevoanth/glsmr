@@ -1,7 +1,7 @@
 Package: glsmr
 Type: Package
 Title: GAM and linear stratified observational and MR estimates of exposure on outcome
-Version: 0.1.0
+Version: 1.1.0
 Author: David A Hughes
 Maintainer: The package maintainer <d.a.hughes@bristol.ac.uk>
 Description: A pacakge to derive observational & causal estimates, in a Mendelian Randomization framework,
@@ -23,3 +23,7 @@ Imports:
   mgcv
 Suggests:
   RColorBrewer
+  cluster
+  ggnewscale
+  lmtest
+  metafor
