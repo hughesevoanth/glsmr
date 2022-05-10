@@ -39,7 +39,7 @@ iv_estimates = function( wdata, dependent, instrument, covariates){
 
   ## sample size in model
   res = residuals(mod)
-  n = length(res); names(n) = "n"
+  mod_n = length(res); names(mod_n) = "n"
 
   ## normality of residuals
   W = normW(res)
@@ -54,10 +54,34 @@ iv_estimates = function( wdata, dependent, instrument, covariates){
   eta_sq = a[,2]/sum(a[,2]); names(eta_sq) = rownames(a)
   etasq = eta_sq[instrument]; names(etasq) = c("etasq")
 
+  ######################
+  ## V. Exposure summary stats
+  ######################
+  ex = mod$model[, instrument]
+  n = length(ex)
+  mean = mean(ex)
+  min = min(ex)
+  max = max(ex)
+  sd = sd(ex)
+  exposure_stats = c(n, mean, min, max, sd)
+  names(exposure_stats) = paste0("exposure_", c("n","mean","min","max","sd") )
+
+  ######################
+  ## V. Outcome summary stats
+  ######################
+  ex = mod$model[, dependent]
+  n = length(ex)
+  mean = mean(ex)
+  min = min(ex)
+  max = max(ex)
+  sd = sd(ex)
+  outcome_stats = c(n, mean, min, max, sd)
+  names(outcome_stats) = paste0("outcome_", c("n","mean","min","max","sd") )
+
   #########################
   ## V. Return to user
   #########################
-  out = c(n, W, rsq, etasq, coef, VarExp)
+  out = c(mod_n, W, rsq, etasq, coef, VarExp, exposure_stats, outcome_stats)
 
   #########################
   ## V. Return to user

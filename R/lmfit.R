@@ -59,10 +59,34 @@ lmfit = function( wdata,
   lm_F = s$fstatistic; names(lm_F) = c("Fstat","df","dendf")
 
   ######################
-  ## V. Linear model data out
+  ## V. Exposure summary stats
+  ######################
+  ex = lm_mod$model[, independent]
+  n = length(ex)
+  mean = mean(ex)
+  min = min(ex)
+  max = max(ex)
+  sd = sd(ex)
+  indepenent_stats = c(n, mean, min, max, sd)
+  names(indepenent_stats) = paste0("exposure_", c("n","mean","min","max","sd") )
+
+  ######################
+  ## V. Outcome summary stats
+  ######################
+  ex = lm_mod$model[, dependent]
+  n = length(ex)
+  mean = mean(ex)
+  min = min(ex)
+  max = max(ex)
+  sd = sd(ex)
+  depenent_stats = c(n, mean, min, max, sd)
+  names(depenent_stats) = paste0("outcome_", c("n","mean","min","max","sd") )
+
+  ######################
+  ## VI. Linear model data out
   ######################
   lm_out = list( fit = lm_mod,
-                 summary = c(lm_n, W, lm_rsq, lm_F, lm_estimates)
+                 summary = c(lm_n, W, lm_rsq, lm_F, lm_estimates, indepenent_stats, depenent_stats)
                  )
 
   return(lm_out)

@@ -4,13 +4,7 @@
 \alias{stratify_ivratio}
 \title{estimates the causal effect estimate or beta_iv for strata}
 \usage{
-stratify_ivratio(
-  strata_beta_ie,
-  strata_beta_io,
-  beta_ie,
-  strata_exp_ss,
-  tsls_ss
-)
+stratify_ivratio(strata_beta_ie, strata_beta_io, beta_ie, tsls_ss)
 }
 \arguments{
 \item{strata_beta_ie}{stratified instrument on exposure estimates from stratify_lmfit()}
@@ -18,8 +12,6 @@ stratify_ivratio(
 \item{strata_beta_io}{stratified instrument on outcome estimates from stratify_lmfit()}
 
 \item{beta_ie}{the instrument on exposure effect estimate for the entire data set}
-
-\item{strata_exp_ss}{stratified exposure summary statistics from stratify_sumstats()}
 
 \item{tsls_ss}{the two-stage least square summary table from the full data set}
 }

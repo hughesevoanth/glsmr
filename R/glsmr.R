@@ -137,6 +137,21 @@ glsmr = function( wdata,
                                     covariates = covariates)
 
   ############################################
+  ### PART I: 10. null GAM model
+  ###             with NO exposure
+  ############################################
+  if(messages == TRUE){ message("Part I.10. running full observational NULL GAM model with NO Exposure to extract outcome residuals modeled with covariate smooths") }
+  res_gam_mod0 = gamfit( wdata = mod_data,
+                         dependent = outcome,
+                         independent = NA,
+                         linear_covariates = c(linear_covariates),
+                         smooth_covariates = smooth_covariates,
+                         exposure_trait = NA)
+  ## place residuals into mod_data
+  m = match(rownames(mod_data), rownames(res_gam_mod0$fit$model))
+  mod_data$GAM_outcome_residuals = residuals(res_gam_mod0$fit)[m]
+
+  ############################################
   ## PART I: 10. Summary Statistics for exposure
   ############################################
   if(messages == TRUE){ message("Part I.10. summary statistic for exposure") }
@@ -148,7 +163,7 @@ glsmr = function( wdata,
               sd = sd(temp[, exposure], na.rm = TRUE) )
   rm(temp)
 
-  ### Estimate again with filtering on instruemtn NAs too
+  ### Estimate again with filtering on Instrument NAs too
   temp = na.omit( mod_data[, c(outcome, exposure, covariates, instrument)] )
   iv_exp_ss = c( N = nrow(temp) ,
               mean = mean(temp[, exposure], na.rm = TRUE),
@@ -157,11 +172,13 @@ glsmr = function( wdata,
               sd = sd(temp[, exposure], na.rm = TRUE) )
   rm(temp)
 
+
   ############################################
   ## PART I: 11. Stratify data by Exposure
   ############################################
-  if(messages == TRUE){ message("Part I.11. stratifying the data by the iv free exposure") }
-  strata_data = stratify_data( wdata = mod_data, stratify_on = "iv_free_exposure", strata = strata )
+  if(messages == TRUE){ message("Part I.11. stratifying the data by the (A) exposure and (B) iv free exposure") }
+  strata_data = stratify_data( wdata = mod_data, stratify_on = exposure, strata = strata )
+  iv_free_strata_data = stratify_data( wdata = mod_data, stratify_on = "iv_free_exposure", strata = strata )
 
   ############################################
   ## PART I: 12. Summary Statistics for exposure
@@ -169,7 +186,7 @@ glsmr = function( wdata,
   ############################################
   if(messages == TRUE){ message("Part I.12. stratified summary statistic for exposure") }
   strata_exp_ss = stratify_sumstats(wdata = strata_data, exposure = exposure, model_vars = c(outcome, exposure, covariates) )
-  iv_strata_exp_ss = stratify_sumstats(wdata = strata_data, exposure = exposure, model_vars = c(outcome, exposure, covariates, instrument) )
+  iv_strata_exp_ss = stratify_sumstats(wdata = iv_free_strata_data, exposure = exposure, model_vars = c(outcome, exposure, covariates, instrument) )
 
   ## PART II: OBSERVATIONAL MODELING
   if(messages == TRUE){ message("Part II. Observational modeling") }
@@ -182,7 +199,8 @@ glsmr = function( wdata,
                      dependent = outcome,
                      independent = NA,
                      linear_covariates = c(linear_covariates, exposure),
-                     smooth_covariates = smooth_covariates)
+                     smooth_covariates = smooth_covariates,
+                     exposure_trait = exposure)
 
   ############################################
   ### PART II: 2. full GAM model
@@ -192,16 +210,31 @@ glsmr = function( wdata,
                     dependent = outcome,
                     independent = exposure,
                     linear_covariates = linear_covariates,
-                    smooth_covariates = smooth_covariates)
+                    smooth_covariates = smooth_covariates,
+                    exposure_trait = exposure)
 
 
   ############################################
-  ## PART II: 3. ANOVA test of GAM with no
-  ##             exposure smooth and full GAM
+  ## PART II: 3. Testing for non-linearity
+  ##             is the GAM with an exposure smooth
+  ##             better than a model without an exposure smooth ?
   ############################################
   if(messages == TRUE){ message("Part II.3. testing non-linearity of observational data: GAM vs NULL GAM") }
+  ## Ftest
   a = anova(gam_mod0$fit, gam_mod$fit, test = "F")
-  obs_nonlinearity_test = a[2,3:6]; names(obs_nonlinearity_test) = paste0( "", c("df","deviance","F","P"))
+  obs_nonlinearity_Ftest = a[2,3:6]; names(obs_nonlinearity_Ftest) = paste0( "", c("obs_nonlinear_Ftest_df","obs_nonlinear_Ftest_deviance","obs_nonlinear_Ftest_F","obs_nonlinear_Ftest_P"))
+
+  ### LRT test
+  obs_nonlinearity_lrt = lmtest::lrtest( gam_mod0$fit, gam_mod$fit )
+  obs_nonlinearity_lrt = unlist( obs_nonlinearity_lrt[2, 3:5] ); names(obs_nonlinearity_lrt) = c("obs_nonlinear_LRT_df","obs_nonlinear_LRT_ChisqStat","obs_nonlinear_LRT_P")
+
+  ### Model Fit Stats
+  mod_stats = c(gam_mod0$summary[c("REML","AIC","loglik")], gam_mod$summary[c("REML","AIC","loglik")])
+  names(mod_stats) = paste0( c( rep("gam_mod0_", 3), rep("gam_mod_", 3) ), names(mod_stats)  )
+  obs_nonlinearity_lrt = c(  mod_stats, obs_nonlinearity_lrt )
+
+  ### Pull the stats together
+  obs_nonlinearity_test = unlist( c(obs_nonlinearity_Ftest, obs_nonlinearity_lrt) )
 
 
   ############################################
@@ -214,7 +247,7 @@ glsmr = function( wdata,
                   covariates = covariates)
 
   ## Combine summary stats of full for data observational data
-  obs_ss = c(lm_mod$summary, exp_ss)
+  # obs_ss = c(lm_mod$summary, exp_ss)
 
   ############################################
   ## PART II: 5. Run observational linear model on each
@@ -226,22 +259,32 @@ glsmr = function( wdata,
                                exposure = exposure,
                                covariates = covariates)
 
+  res_strata_lm_mod = stratify_lmfit( wdata = strata_data,
+                                  outcome = "GAM_outcome_residuals",
+                                  exposure = exposure,
+                                  covariates = NA)
+
   ## Combine strata sumstats and linear model estimates
-  strata_obs_ss = cbind(strata_lm_mod, strata_exp_ss)
+  # strata_obs_ss = cbind(strata_lm_mod, strata_exp_ss)
 
   ############################################
   ## PART II: 6. Observational Meta
   ##              Analysis
   ############################################
   if(messages == TRUE){ message("Part II.6. run meta analysis on observational strata betas and means") }
-  obs_meta_test = meta_test( strata_obs_ss )
+  obs_meta_test = meta_test( strata_lm_mod, modulator_col_name = "exposure_mean" )
+  res_obs_meta_test = meta_test( res_strata_lm_mod,  modulator_col_name = "exposure_mean" )
 
   ############################################
   ## PART II: 7. Combine strata summary stats
   ##              & full model summary stats
   ############################################
-  obs_ss = rbind( strata_obs_ss , fulldata = obs_ss )
-  obs_ss = obs_ss[, -c(4:6,9) ]
+  obs_ss = rbind( strata_lm_mod , fulldata = lm_mod$summary )
+  # obs_ss = obs_ss[, -c(4:6,9) ]
+  ## observational results for the residualized outcome.
+  res_obs_ss = rbind( res_strata_lm_mod , fulldata = lm_mod$summary )
+
+
 
   ## PART III: OBSERVATIONAL MODELING
   if(messages == TRUE){ message("Part III. MR modeling") }
@@ -272,9 +315,27 @@ glsmr = function( wdata,
   ##              GAM_0 vs GAM
   ####################################
   if(messages == TRUE){ message("Part III.3. testing non-linearity of TSLS model: GAM vs NULL GAM") }
+  ## Ftest
   a = anova(iv_gam_mod0$fit, iv_gam_mod$fit, test = "F")
-  iv_nonlinearity_test = a[2,3:6]; names(iv_nonlinearity_test) = paste0( "", c("df","deviance","F","P"))
+  iv_nonlinearity_Ftest = a[2,3:6]; names(iv_nonlinearity_Ftest) = paste0( "", c("iv_nonlinear_Ftest_df","iv_nonlinear_Ftest_deviance","iv_nonlinear_Ftest_F","iv_nonlinear_Ftest_P"))
 
+  ### LRT
+  iv_nonlinearity_lrt = lmtest::lrtest( iv_gam_mod0$fit, iv_gam_mod$fit )
+  iv_nonlinearity_lrt = unlist( iv_nonlinearity_lrt[2, 3:5] ); names(iv_nonlinearity_lrt) = c("iv_nonlinear_LRT_df","iv_nonlinear_LRT_ChisqStat","iv_nonlinear_LRT_P")
+
+  ## model fit sum stats
+  mod_stats = c(iv_gam_mod0$summary[c("REML","AIC","loglik")], iv_gam_mod$summary[c("REML","AIC","loglik")])
+  names(mod_stats) = paste0( c( rep("iv_gam_mod0_", 3), rep("iv_gam_mod_", 3) ), names(mod_stats)  )
+  iv_nonlinearity_lrt = c(  mod_stats, iv_nonlinearity_lrt )
+
+  ### Pull stats together
+  iv_nonlinearity_test = unlist( c(iv_nonlinearity_Ftest, iv_nonlinearity_lrt) )
+
+  ##########################
+  ## Combine Obs and IV
+  ## non-linearity test stats
+  ## Data Out
+  ##########################
   nonlinearity_test = rbind(obs = obs_nonlinearity_test, tsls = iv_nonlinearity_test)
 
   ####################################
@@ -311,7 +372,7 @@ glsmr = function( wdata,
   ratio_mr_ss$P[3] = ratio_mr_ss$P[2]
   ratio_mr_ss$n[3] = ratio_mr_ss$n[2]
 
-  ratio_mr_ss = cbind(ratio_mr_ss, rbind(iv_exp_ss, iv_exp_ss, iv_exp_ss))
+  # ratio_mr_ss = cbind(ratio_mr_ss, rbind(iv_exp_ss, iv_exp_ss, iv_exp_ss))
 
   ####################################
   ### PART III: 7. ivreg()
@@ -327,8 +388,12 @@ glsmr = function( wdata,
                      rnt_outcome = FALSE)
 
   ### Combine FULL DATA TSLS | MR summary statistics
-  ivreg_ss = c( iv_fit$summary, iv_exp_ss )
-  m = match(names(ratio_mr_ss), names(ivreg_ss) )
+  cn =  c("exposure_n", "exposure_mean", "exposure_min", "exposure_max", "exposure_sd",
+  "outcome_n", "outcome_mean", "outcome_min", "outcome_max", "outcome_sd")
+  ratio_mr_ss[3, cn] = iv_fit$summary[cn]
+  ###
+  ivreg_ss = iv_fit$summary
+  m = match( names(ratio_mr_ss), names(ivreg_ss) )
   tsls_ss = rbind( ratio_mr_ss, ivreg = ivreg_ss[m] )
 
 
@@ -337,11 +402,11 @@ glsmr = function( wdata,
   ###               beta coefficients by strata
   ####################################
   if(messages == TRUE){ message("Part III.8. estimating effect of instrument on exposure for each strata") }
-  iv_strata_beta_ie = stratify_lmfit( wdata = strata_data,
+  iv_strata_beta_ie = stratify_lmfit( wdata = iv_free_strata_data,
                                    outcome = exposure,
                                    exposure = instrument,
                                    covariates = covariates)
-  iv_strata_beta_ie = cbind(iv_strata_beta_ie, iv_strata_exp_ss )
+  # iv_strata_beta_ie = cbind(iv_strata_beta_ie, iv_strata_exp_ss )
 
   ####################################
   ### PART III: 9. Testing assumption
@@ -350,7 +415,7 @@ glsmr = function( wdata,
   ###                i.e. relationship is linear
   ####################################
   if(messages == TRUE){ message("Part III.9. IV-exposure assumption meta (beta_ie)") }
-  ie_meta_test = meta_test( iv_strata_beta_ie )
+  ie_meta_test = meta_test( iv_strata_beta_ie, modulator_col_name = "exposure_mean"  )
 
 
   ####################################
@@ -358,11 +423,11 @@ glsmr = function( wdata,
   ###               beta coefficients by strata
   ####################################
   if(messages == TRUE){ message("Part III.10. estimating effect of instrument on outcome for each strata") }
-  iv_strata_beta_io = stratify_lmfit( wdata = strata_data,
+  iv_strata_beta_io = stratify_lmfit( wdata = iv_free_strata_data,
                                    outcome = outcome,
                                    exposure = instrument,
                                    covariates = covariates)
-  iv_strata_beta_io = cbind(iv_strata_beta_io, iv_strata_exp_ss )
+  # iv_strata_beta_io = cbind(iv_strata_beta_io, iv_strata_exp_ss )
 
   ####################################
   ### PART III: 11. Beta_iv causal effect
@@ -370,33 +435,33 @@ glsmr = function( wdata,
   ####################################
   if(messages == TRUE){ message("Part III.11. estimating the iv ratio MR estimates for each strata") }
   iv_strata_ratio = stratify_ivratio( strata_beta_ie = iv_strata_beta_ie,
-                    strata_beta_io = iv_strata_beta_io,
-                    beta_ie = beta_ie["beta"],
-                    strata_exp_ss = iv_strata_exp_ss,
-                    tsls_ss = tsls_ss)
+                                      strata_beta_io = iv_strata_beta_io,
+                                      beta_ie = beta_ie["beta"],
+                                      tsls_ss = tsls_ss)
 
   ####################################
   ## PART III: 12. Run a ivreg model
   ##               on each strata
   ####################################
   if(messages == TRUE){ message("Part III.12. running ivreg on each strata") }
-  iv_strata_ivreg = stratify_ivregfit( wdata = strata_data,
+  iv_strata_ivreg = stratify_ivregfit( wdata = iv_free_strata_data,
                                 outcome = outcome,
                                 exposure = exposure,
                                 instrument = instrument,
                                 covariates = covariates,
                                 weights_variable = NA,
                                 rnt_outcome = FALSE)
-  iv_strata_ivreg = cbind(iv_strata_ivreg, iv_strata_exp_ss )
+
+  # iv_strata_ivreg = cbind(iv_strata_ivreg, iv_strata_exp_ss )
 
   ####################################
   ### PART III: 13. ivreg meta
   ####################################
   if(messages == TRUE){ message("Part III.13. ivreg meta analysis (beta_iv)") }
-  iv_meta_test = meta_test( iv_strata_ivreg )
+  iv_meta_test = meta_test( iv_strata_ivreg, modulator_col_name = "exposure_mean" )
 
   ## add the full data ivreg results
-  iv_strata_ivreg = rbind(iv_strata_ivreg, fulldata = c( iv_fit$summary, iv_exp_ss ))
+  iv_strata_ivreg = rbind(iv_strata_ivreg, fulldata =  iv_fit$summary )
 
 
   if(messages == TRUE){ message("Part IV. returning results to user") }
@@ -422,8 +487,8 @@ glsmr = function( wdata,
   rownames(ss_out) = "sumstats"
 
   ## meta analysis stats.
-  meta_stats = rbind(obs_meta_test, ie_meta_test, iv_meta_test)
-  rownames(meta_stats) = c("obs","ie","mr")
+  meta_stats = rbind(obs_meta_test, res_obs_meta_test, ie_meta_test, iv_meta_test)
+  rownames(meta_stats) = c("obs", "res_obs", "ie","mr")
 
   ############################################
   ### Place all Summary Tables together
@@ -432,6 +497,7 @@ glsmr = function( wdata,
     ## test of non-linear relationships
     nonlinearity_test = nonlinearity_test,
     observational_sumstats = obs_ss,
+    observational_GAM_res_sumstats = res_obs_ss,
     ### return the instrument exposure and instrument outcome stat estimates
     strata_beta_ie  = iv_strata_beta_ie,
     strata_beta_io  = iv_strata_beta_io,

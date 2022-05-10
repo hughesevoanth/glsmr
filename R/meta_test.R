@@ -4,15 +4,23 @@
 #'
 #' @keywords normality Shapiro-Wilk W-statistic
 #' @param strata_table stratified summary table including beta, se, and exposure mean column
+#' @param modulator_col_name a string to identify the column name that will act as the modulator. Default column names is "mean".
 #' @return meta analysis summary statistics
 #' @importFrom metafor rma
 #' @export
 #' @examples
 #' meta_test()
-meta_test = function( strata_table ){
+meta_test = function( strata_table, modulator_col_name = "mean" ){
   ##############################
   ## Fixed Effect Meta Analysis
   ##############################
+  ## Redefine the name of the modulator (column names)
+  w = which(colnames(strata_table) == modulator_col_name)
+  if(length(w) == 1){
+    colnames(strata_table)[w] = "modulator"
+  }
+
+  ###
   meta_test = metafor::rma(yi = strata_table$beta,  ## Effects
                               vi = strata_table$se^2,  ## Sample variance
                               method = "FE" )             ## Fixed Effects
@@ -30,7 +38,7 @@ meta_test = function( strata_table ){
   ## Modulator is the mean of each
   ## strat
   ##############################
-  meta_mod_test <- metafor::rma(yi = strata_table$beta ~ strata_table$mean,
+  meta_mod_test <- metafor::rma(yi = strata_table$beta ~ strata_table$modulator,
                                          vi = strata_table$se^2,
                                          method="FE" )
   ## Test of Residual Heterogeneity

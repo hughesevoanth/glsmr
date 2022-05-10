@@ -37,9 +37,11 @@ stratify_ivregfit = function( wdata,
                          weights_variable = NA,
                          rnt_outcome = FALSE)
       }else{
-        o = rep(NA, 18); names(o) = c("n","Rsq","Wald_stat","Wald_df1","Wald_df2","Wald_P",
+        o = rep(NA, 29); names(o) = c("n","W","rsq","Wald_stat","Wald_df1","Wald_df2","Wald_P",
                                     "Fstat","F_df1","F_df2","F_P","WuH_stat","WuH_df1","WuH_df2","WuH_P",
-                                    "beta","se","tval","P")
+                                    "beta","se","tval","P",
+                                    "exposure_n","exposure_mean","exposure_min","exposure_max","exposure_sd",
+                                    "outcome_n","outcome_mean","outcome_min","outcome_max","outcome_sd")
         iv_mod = list(summary = o)
     }
     return(iv_mod$summary)

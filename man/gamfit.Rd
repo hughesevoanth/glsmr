@@ -10,7 +10,10 @@ gamfit(
   independent = NA,
   linear_covariates = NA,
   smooth_covariates = NA,
-  rnt_dependent = FALSE
+  rnt_dependent = FALSE,
+  return_prediction = FALSE,
+  new_prediction_data = NA,
+  exposure_trait = NA
 )
 }
 \arguments{
@@ -18,13 +21,15 @@ gamfit(
 
 \item{dependent}{a single string character of the column name for the dependent or response variable.}
 
-\item{independent}{a single string character of the column name for the independent or explanatory variable.}
+\item{independent}{a single string character of the column name for the independent or explanatory variable that will be modeled as a smooth. This can be left NA, and you can instead add the exposure trait to the list of "linear_covariates", to define a null model where the exposure is modeled as a parametric term.}
 
 \item{linear_covariates}{a vector of string(s) that are also column names used to define variables that will be set as parametric (linear) covariates.}
 
 \item{smooth_covariates}{a vector of string(s) that are also column names used to define variables that will be set as non-linear (smooth, s()) covariates.}
 
 \item{rnt_dependent}{binary TRUE or FALSE if the dependent or response variable should be rank normal transformed.}
+
+\item{exposure_trait}{a single string character of the column name with the focus exposure trait of interest. If the "dependent" is set to NA, the string defined here will be used to estimate exposure summary stats (n, mean, min, max, sd) for your model.}
 }
 \value{
 returns a list object containing two objects, (1) 'fit' which holds the gam() model and (2) 'summary' which is a vector of summary statistics derived from the model.
