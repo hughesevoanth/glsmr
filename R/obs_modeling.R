@@ -103,13 +103,13 @@ obs_modeling = function( wdata,
   ############################################
   ### PART II: 1. Linear model
   ############################################
-  if(messages == TRUE){ message("Part II.1. lm() linear modeling") }
-  lm_mod = lmfit( wdata = mod_data,
-                  dependent = outcome,
-                  independent = exposure,
-                  covariates = covariates)
-  names(lm_mod$summary) = paste0("lm_",names(lm_mod$summary))
-
+  # if(messages == TRUE){ message("Part II.1. lm() linear modeling") }
+  # lm_mod = lmfit( wdata = mod_data,
+  #                 dependent = outcome,
+  #                 independent = exposure,
+  #                 covariates = covariates)
+  # names(lm_mod$summary) = paste0("lm_",names(lm_mod$summary))
+  #
   ## LINEAR MODELING WITH THE gam() function
   gam_mod_lm = gamfit( wdata = mod_data,
                         dependent = outcome,
@@ -121,9 +121,15 @@ obs_modeling = function( wdata,
   se = summary(gam_mod_lm$fit)[2][[1]][exposure]; names(se) = "exposure_se"
   tval = summary(gam_mod_lm$fit)[3][[1]][exposure]; names(tval) = "exposure_tval"
   p = summary(gam_mod_lm$fit)[4][[1]][exposure]; names(p) = "exposure_P"
-  aic = AIC(gam_mod_lm$fit); names(aic) = "aic"
-  loglik = logLik(gam_mod_lm$fit); names(loglik) = "loglik"
-  gam_mod_lm$summary = c(gam_mod_lm$summary, beta, se, tval, p, aic, loglik)
+  # aic = AIC(gam_mod_lm$fit); names(aic) = "aic"
+  # loglik = logLik(gam_mod_lm$fit); names(loglik) = "loglik"
+  # gam_mod_lm$summary = c(gam_mod_lm$summary, beta, se, tval, p, aic, loglik)
+
+  ## Remove NAs (exposure|independent sum stats)
+  gam_mod_lm$summary = na.omit(gam_mod_lm$summary)
+  ## Redefine
+  gam_mod_lm$summary = c(beta, se, tval, p, gam_mod_lm$summary)
+  ## edit names
   names(gam_mod_lm$summary) = paste0("gam_lm_", names(gam_mod_lm$summary))
 
   ############################################
@@ -136,10 +142,21 @@ obs_modeling = function( wdata,
                      independent = NA,
                      linear_covariates = c(linear_covariates, exposure),
                      smooth_covariates = smooth_covariates)
+  ## exposure estimates
+  beta = summary(gam_mod0$fit)[1][[1]][exposure]; names(beta) = "exposure_beta"
+  se = summary(gam_mod0$fit)[2][[1]][exposure]; names(se) = "exposure_se"
+  tval = summary(gam_mod0$fit)[3][[1]][exposure]; names(tval) = "exposure_tval"
+  p = summary(gam_mod0$fit)[4][[1]][exposure]; names(p) = "exposure_P"
+
   ## Add AIC and LogLik to summary data
-  loglik = logLik(gam_mod0$fit); names(loglik) = "loglik"
-  aic = AIC(gam_mod0$fit); names(aic) = "aic"
-  gam_mod0$summary = c(gam_mod0$summary, loglik, aic)
+  # loglik = logLik(gam_mod0$fit); names(loglik) = "loglik"
+  # aic = AIC(gam_mod0$fit); names(aic) = "aic"
+  # gam_mod0$summary = c(gam_mod0$summary, loglik, aic)
+
+  ## Remove NAs (exposure|independent sum stats)
+  gam_mod0$summary = na.omit(gam_mod0$summary)
+  ## Redefine
+  gam_mod0$summary = c(beta, se, tval, p, gam_mod0$summary)
   ## edit names
   names(gam_mod0$summary) = paste0("gam0_",names(gam_mod0$summary))
 
@@ -153,9 +170,10 @@ obs_modeling = function( wdata,
                     linear_covariates = linear_covariates,
                     smooth_covariates = smooth_covariates)
   ## Add AIC and LogLik to summary data
-  loglik = logLik(gam_mod$fit); names(loglik) = "loglik"
-  aic = AIC(gam_mod$fit); names(aic) = "aic"
-  gam_mod$summary = c(gam_mod$summary, loglik, aic)
+  # loglik = logLik(gam_mod$fit); names(loglik) = "loglik"
+  # aic = AIC(gam_mod$fit); names(aic) = "aic"
+  # gam_mod$summary = c(gam_mod$summary, loglik, aic)
+
   ## edit names
   names(gam_mod$summary) = paste0("gam_",names(gam_mod$summary))
 
@@ -178,7 +196,8 @@ obs_modeling = function( wdata,
 
 
   if(messages == TRUE){ message("Part IV.2. returning results to user") }
-  out = unlist( c(  lm_mod$summary, gam_mod_lm$summary, gam_mod0$summary, gam_mod$summary, Ftest, lrt) )
+  # out = unlist( c(  lm_mod$summary, gam_mod_lm$summary, gam_mod0$summary, gam_mod$summary, Ftest, lrt) )
+  out = unlist( c(   gam_mod_lm$summary, gam_mod0$summary, gam_mod$summary, Ftest, lrt) )
 
   return(out)
 
