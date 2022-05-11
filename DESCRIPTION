@@ -22,8 +22,8 @@ Imports:
   magrittr,
   mgcv
 Suggests:
-  RColorBrewer
-  cluster
-  ggnewscale
-  lmtest
+  RColorBrewer,
+  cluster,
+  ggnewscale,
+  lmtest,
   metafor
