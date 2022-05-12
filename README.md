@@ -50,6 +50,11 @@ This is an R package to aid in determining if observational or two-stage least s
 
 ![](figures/plot_v3.png)
 
+### See this repo's wiki for more information
+
+[wiki page here](https://github.com/hughesevoanth/glsmr/wiki)
+
+
 ### Brief description of glsmr steps
 
 1. Setting up the data
