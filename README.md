@@ -17,7 +17,7 @@ This is an R package to aid in determining if observational or two-stage least s
 - an example for using glsmr
        	
 		myexample = glsmr( wdata = mydata,
-	          outcome = "glucose",
+	          outcome = "trait",
 	          exposure = "bmi",
 	          instrument = "bmi_grs",
 	          linear_covariates = c("batch", "sex"),
@@ -40,15 +40,15 @@ This is an R package to aid in determining if observational or two-stage least s
 			add_strata_2_curves = FALSE,
 			add_strata_2_points = TRUE,
 			brewer_col = "Set1",
-			old_plot_scheme = FALSE,
-			old_GAM_smooths = FALSE,
-   			plot_obs_res_betas = FALSE,
+			old_plot_scheme = TRUE,
+			old_GAM_smooths = TRUE,
+			plot_obs_res_betas = FALSE,
 		  	pval_thresh = 0.05)
 
 
 ### An example figure from plot_glsmr()
 
-![](figures/example1.png)
+![](figures/plot_v3.png)
 
 ### Brief description of glsmr steps
 
