@@ -23,12 +23,13 @@ This is an R package to aid in determining if observational or two-stage least s
 	          linear_covariates = c("batch", "sex"),
 	          smooth_covariates =  c("age"),
 	          # strata = 4, ## for quartiles
-	          strata = c(17,25,30,62),
+	          strata = c(10,18.5,25,30,45),
 	          rnt_outcome = TRUE,
 	          weights_variable = NA,
 	          outlier_method = "iqr",
 	          outlier_cutoff = 5,
-	          messages = FALSE)
+	          messages = FALSE,
+	          return_models = TRUE)
 	
 
 	- NOTE: 'smooth_covariates' will be modeled as smooths or non-linear variables in the GAM, but as typical parametric variables in the linear and tsls analyses. 
@@ -38,7 +39,12 @@ This is an R package to aid in determining if observational or two-stage least s
 		plot_glsmr(myexample,
 			add_strata_2_curves = FALSE,
 			add_strata_2_points = TRUE,
-			brewer_col = "Set1")
+			brewer_col = "Set1",
+			old_plot_scheme = FALSE,
+			old_GAM_smooths = FALSE,
+   			plot_obs_res_betas = FALSE,
+		  	pval_thresh = 0.05)
+
 
 ### An example figure from plot_glsmr()
 
@@ -46,22 +52,45 @@ This is an R package to aid in determining if observational or two-stage least s
 
 ### Brief description of glsmr steps
 
-1. identify oucome outliers and turn into NA
-2. identify exposure outliers and turn into NA
-3. estimate Shapiro Wilk W-statistics for outcome
-4. estimate Shapiro Wilk W-statistics for exposure
-5. fit a standard lm() linear model to full data set
-6. fit a null GAM to full data set, where the exposure is modeled as a parametric variable
-7. fit a GAM to the full data set, where the exposure is modeled as a smooth variable
-8. perform an F-test to determine if a non-linear exposure model is better than the linear null model (step 7 vs step 6)
-9. stratify the data
-10. run a standard observational linear model on each strata
-11. run a TSLS (ivreg) on the full data set
-12. estimate d.hat or the instrument predicted exposure
-13. fit a null GAM to full data set, where d.hat is modeled as a parametric variable
-14. fit a GAM to full data set, where d.hat is modeled as a smooth variable
-15. perform an F-test to determine if a non-linear d.hat model is better than the linear null model (step 14 vs step 13)
-16. run a tsls ivreg model on each strata
+1. Setting up the data
+	1. identify oucome outliers and turn into NA
+	2. identify exposure outliers and turn into NA
+	3. estimate Shapiro Wilk W-statistics for outcome
+	4. estimate Shapiro Wilk W-statistics for exposure
+	5. if requested rank normal transform the outcome
+	6. derive the IV-free exposure with > residuals( lm(exposure ~ iv) ) + mean(exposure)
+	7. derive instrument predicted exposure. Sometimes called d.hat.
+	8. fit a no exposure GAM with defined parametric and smooth covariables to extract outcome residuals.
+	9. stratify the data by the exposure for stratified observational analyses
+	10. stratify the data by the iv-free-exposure for the stratified MR analyses 
+2. Observational Modeling
+	1. fit a NULL GAM with exposure modeled as a parametric term
+	2. fit a full GAM with the exposure modeled as a smooth term
+	3. test for non-linearity with a F-test
+	4. test for non-lineariry with a Likelihood-Ratio test (LRT)
+	5. fit a linear ( lm() ) model where all covariables are parametric terms and extract summary statsistics.
+	6. fit a linear model to the exposure stratified data and extract summary statistics
+	7. fit a univariable linear model to the stratified data but using the GAM residuals from step1.7 as the outcome and extract summary statistics.
+	8. perform a meta analysis and a meta analysis with a modulator (mean of stratified exposures) term to results of 2.6 and 2.7.
+3. MR Modeling
+	1. fit a NULL IV GAM setting the IV-predicted-exposure from step 1.7 as a parametric term.
+	2. fit a full IV GAM setting the IV-predicted-exposure from step 1.7 as a smooth term.
+	3. test for non-linearity with a F-test.
+	4. test for non-linearity with a Likelihood-Ratio test (LRT).
+	5. estimate the (complete|full data) instrument on exposure effect (beta_ie)
+	6. estimate the (complete|full data) instrument on outcome effect (beta_io)
+	7. estiamte the (complete|full data) causal effect using the ratio method beta_iv = beta_io/beta_ie
+	8. estimate the causal MR effect using ivreg Rpackage.
+	9. estimate beta_ie on the iv-free-exposure stratified data 
+		1. NOTE: the exposure remains the exposure, not the iv-free-exposure
+	10. perfom a meta-analysis on the stratified beta-ie to test the IV-assumption (heterogeneity among strata) 
+	11. estimate beta_io on the iv-free-exposure stratified data
+	12. estimate beta_iv on the iv-free-exposure stratified data using the ratio method
+		1. beta_ie (denominator) is set as the full data set estimate from step 3.4
+		2. beta_ie (denominator) is set as the stratfied data set estimated from step 3.9
+	13. estimate beta_iv on the iv-free-exposure stratified data using the ivreg Rpackage
+	14. perfom a meta-analysis on beta_iv from step 3.13
+
 
 ### objects returned by glsmr as a list
 
@@ -112,6 +141,8 @@ This is an R package to aid in determining if observational or two-stage least s
 9. weights_variable: column name indicating the designated weights variable. As of yet not fully integrated into package.
 10. sd_outlier_cutoff: the number of SD or IQR units to use as a cutoff threshold. SD uses means, IQR uses medians.
 11. sd_or_iqr_cutoff: the string "iqr" will use median and IQR unit distances, all other string values would use means and SD unit distances.
+12. message: if TRUE a verbose list of each step that glsmr() takes will be printed to screen.
+13. return_models: a binary TRUE of FALSE if you want each of the complete data models run, returned to the user. Set to FALSE, if you are iterating over many features and just want the summary statsitics, as the resulting object can be very big. 
 
 
 
