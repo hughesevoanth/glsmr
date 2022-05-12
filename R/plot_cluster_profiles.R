@@ -7,11 +7,12 @@
 #' @param k which k (k-means) cluster to plot?
 #' @param exposure_values what the x-axis values should be
 #' @param exposure_name x-axis label
+#' @param col_count how many columns to have in plot
 #' @return a ggplot
 #' @export
 #' @examples
 #' plot_cluster_profiles()
-plot_cluster_profiles = function( cluster_data, k = 10,  exposure_values = NA , exposure_name = "Exposure"){
+plot_cluster_profiles = function( cluster_data, k = 10,  exposure_values = NA , exposure_name = "Exposure", col_count = NULL){
 
   #############################################
   ## STEP 1:
@@ -75,17 +76,31 @@ plot_cluster_profiles = function( cluster_data, k = 10,  exposure_values = NA , 
   ## STEP 4:
   ##   Make the plot
   #############################################
-  profile_plot = mytable %>% ggplot(aes( x = exposure, y = mean )) +
-    geom_point(aes(color = as.factor(cluster) )) +
-    geom_errorbar( aes(ymin= lowerCI , ymax= upperCI ),
-                   width=.2,
-                   position=position_dodge(0.05), color = "grey50" ) +
-    facet_wrap(. ~ as.factor(cluster) ) +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 6)) +
-    labs(color = "Kmeans Cluster", title = "Outcome on exposure GAM clustering profiles",
-         y = "Outcome cluster means and 95% CI", x = exposure_name) +
-    theme_bw() +
-    theme(legend.position = "none")
+  if(!is.null(col_count)){
+    profile_plot = mytable %>% ggplot(aes( x = exposure, y = mean )) +
+      geom_point(aes(color = as.factor(cluster) )) +
+      geom_errorbar( aes(ymin= lowerCI , ymax= upperCI ),
+                     width=.2,
+                     position=position_dodge(0.05), color = "grey50" ) +
+      facet_wrap(. ~ as.factor(cluster), ncol = col_count) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 6)) +
+      labs(color = "Kmeans Cluster", title = "Outcome on exposure GAM clustering profiles",
+           y = "Outcome cluster means and 95% CI", x = exposure_name) +
+      theme_bw() +
+      theme(legend.position = "none")
+  } else {
+      profile_plot = mytable %>% ggplot(aes( x = exposure, y = mean )) +
+        geom_point(aes(color = as.factor(cluster) )) +
+        geom_errorbar( aes(ymin= lowerCI , ymax= upperCI ),
+                       width=.2,
+                       position=position_dodge(0.05), color = "grey50" ) +
+        facet_wrap(. ~ as.factor(cluster)) +
+        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 6)) +
+        labs(color = "Kmeans Cluster", title = "Outcome on exposure GAM clustering profiles",
+             y = "Outcome cluster means and 95% CI", x = exposure_name) +
+        theme_bw() +
+        theme(legend.position = "none")
+  }
 
 
   ## return to user

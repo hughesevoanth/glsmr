@@ -8,7 +8,8 @@ plot_cluster_profiles(
   cluster_data,
   k = 10,
   exposure_values = NA,
-  exposure_name = "Exposure"
+  exposure_name = "Exposure",
+  col_count = NULL
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ plot_cluster_profiles(
 \item{exposure_values}{what the x-axis values should be}
 
 \item{exposure_name}{x-axis label}
+
+\item{col_count}{how many columns to have in plot}
 }
 \value{
 a ggplot
