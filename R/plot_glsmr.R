@@ -315,7 +315,7 @@ plot_glsmr = function( glsmr_obj,
   } else {
     ## NEW PLOT SCHEME WITH GAM PREDICTION CURVES
     ## OBSERVATIONAL PLOT
-    o_lnl_plot = obs_predicted_tbl %>% ggplot( aes_string(x = exposure, y = mt) ) +
+    o_lnl_plot = obs_predicted_tbl %>% ggplot( aes_string(x = exposure, y = outcome) ) +
       geom_line( aes( color = model ), size = 1.5) +
       geom_ribbon(aes(ymin = CI_lower,  ymax = CI_upper, fill = model ), alpha = 0.2 ) +
       #scale_color_brewer(palette = "Set1") +
@@ -342,7 +342,7 @@ plot_glsmr = function( glsmr_obj,
     }
 
     ## MR | TSLS PLOT
-    iv_lnl_plot = iv_predicted_tbl %>% ggplot( aes_string(x = iv, y = mt) ) +
+    iv_lnl_plot = iv_predicted_tbl %>% ggplot( aes_string(x = iv, y = outcome) ) +
       geom_line( aes( color = model ) , size = 1.5) +
       geom_ribbon(aes(ymin = CI_lower,  ymax = CI_upper, fill = model ), alpha = 0.2 ) +
       #scale_color_brewer(palette = "Set1") +
