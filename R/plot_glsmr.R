@@ -61,7 +61,7 @@ plot_glsmr = function( glsmr_obj,
   ##      point estimate plots
   #############################
   ## define pvalue string
-  if(nchar(pval_thresh) > 4 ){
+  if( nchar(pval_thresh) > 4 ){
     pv = formatC(pval_thresh, format = "e", digits = 2)
   } else {
     pv = as.character( pval_thresh )
@@ -156,7 +156,7 @@ plot_glsmr = function( glsmr_obj,
   } else { linear_covariates = NA }
 
   ## limit to one value of each linear covariate
-  if(!is.na(linear_covariates)){
+  if(!is.na(linear_covariates[1])){
     for(lc in linear_covariates){
       w = which(colnames(predicted_tbl) == lc)
       vals = unique(predicted_tbl[,w])
@@ -169,6 +169,7 @@ plot_glsmr = function( glsmr_obj,
       predicted_tbl = predicted_tbl %>% filter( .data[[lc]] == vals )
     }
   }
+
   ## Add model type to the table
   predicted_tbl$model = "parametric"
   predicted_tbl_P = predicted_tbl
@@ -187,7 +188,7 @@ plot_glsmr = function( glsmr_obj,
   } else { linear_covariates = NA }
 
   ## limit to one value of each linear covariate
-  if(!is.na(linear_covariates)){
+  if(!is.na(linear_covariates[1])){
     for(lc in linear_covariates){
       w = which(colnames(predicted_tbl) == lc)
       vals = unique(predicted_tbl[,w])
@@ -224,7 +225,7 @@ plot_glsmr = function( glsmr_obj,
   } else { linear_covariates = NA }
 
   ## limit to one value of each linear covariate
-  if(!is.na(linear_covariates)){
+  if(!is.na(linear_covariates[1])){
     for(lc in linear_covariates){
       w = which(colnames(predicted_tbl) == lc)
       vals = unique(predicted_tbl[,w])
@@ -255,7 +256,7 @@ plot_glsmr = function( glsmr_obj,
   } else { linear_covariates = NA }
 
   ## limit to one value of each linear covariate
-  if(!is.na(linear_covariates)){
+  if(!is.na(linear_covariates[1])){
     for(lc in linear_covariates){
       w = which(colnames(predicted_tbl) == lc)
       vals = unique(predicted_tbl[,w])

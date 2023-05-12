@@ -22,7 +22,7 @@
 #' @param outlier_cutoff a single numeric value to define a cutoff value for how many iqr or sd units outlier values
 #' @param outlier_method a single string character of "iqr" or "sd" to determine if outlier should be determined by means and sd or medians and iqr.
 #' @param messages should a progress message be printed to screen - binary TRUE or FALSE
-#' @param return_models should the model data data frame and each gam and linear model be returned (TRUE or FALSE). Default is FALSE.
+#' @param return_models should the model data data frame and each gam and linear model be returned (TRUE or FALSE). Default is TRUE, as they are needed for the plot function.
 #' @return returns a glsmr object containing the complete linear and GAM models for the full data set, summary statistics for the data, a strata observational table, and a strata TSLS (MR) table.
 #' @importFrom stats na.omit anova quantile sd formula lm fitted.values quantile
 #' @export
@@ -40,7 +40,7 @@ glsmr = function( wdata,
                   outlier_method = "iqr",
                   outlier_cutoff = 5,
                   messages = FALSE,
-                  return_models = FALSE){
+                  return_models = TRUE){
 
   ############################################
   ### 0. look for any errors in parameters
@@ -286,7 +286,7 @@ glsmr = function( wdata,
 
 
 
-  ## PART III: OBSERVATIONAL MODELING
+  ## PART III: MR MODELING
   if(messages == TRUE){ message("Part III. MR modeling") }
   ####################################
   ### PART III: 1. Null IV GAM model
